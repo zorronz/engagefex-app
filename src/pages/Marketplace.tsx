@@ -77,18 +77,16 @@ export default function Marketplace() {
   const handleComplete = async (commentText?: string) => {
     if (!selectedTask || !user?.id) return;
 
-    // Insert completion
-    const { error: insertError } = await supabase.from('task_completions').insert({
+    const insertData: Database['public']['Tables']['task_completions']['Insert'] = {
       task_id: selectedTask.id,
       user_id: user.id,
       status: 'pending',
       comment_text: commentText || null,
       completed_at: new Date().toISOString(),
-    });
+    };
 
+    const { error: insertError } = await supabase.from('task_completions').insert(insertData);
     if (insertError) throw new Error(insertError.message);
-
-    // Update completed task set
     setCompletedTaskIds(prev => new Set([...prev, selectedTask.id]));
   };
 
