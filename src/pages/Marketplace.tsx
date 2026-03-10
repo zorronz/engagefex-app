@@ -85,7 +85,7 @@ export default function Marketplace() {
       completed_at: new Date().toISOString(),
     };
 
-    const { error: insertError } = await supabase.from('task_completions').insert(insertData);
+    const { error: insertError } = await (supabase.from('task_completions') as ReturnType<typeof supabase.from>).insert(insertData as never);
     if (insertError) throw new Error(insertError.message);
     setCompletedTaskIds(prev => new Set([...prev, selectedTask.id]));
   };
