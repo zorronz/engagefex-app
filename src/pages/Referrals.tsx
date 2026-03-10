@@ -3,6 +3,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Copy, Check, Users, TrendingUp, DollarSign } from 'lucide-react';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 
 export default function Referrals() {
   const { profile, user } = useAuth();
@@ -23,8 +25,8 @@ export default function Referrals() {
 
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from('referrals').select('referred_id, created_at').eq('referrer_id', user.id).then(({ data }) => { if (data) setReferrals(data as { referred_id: string; created_at: string }[]); });
-    supabase.from('referral_commissions').select('amount, status, locked_until').eq('referrer_id', user.id).then(({ data }) => { if (data) setCommissions(data as { amount: number; status: string; locked_until: string }[]); });
+    db.from('referrals').select('referred_id, created_at').eq('referrer_id', user.id).then(({ data }: { data: typeof referrals }) => { if (data) setReferrals(data); });
+    db.from('referral_commissions').select('amount, status, locked_until').eq('referrer_id', user.id).then(({ data }: { data: typeof commissions }) => { if (data) setCommissions(data); });
   }, [user?.id]);
 
   const totalCommissions = commissions.reduce((s, c) => s + c.amount, 0);
@@ -38,7 +40,7 @@ export default function Referrals() {
     const amount = parseFloat(payoutForm.amount);
     if (amount < 500) { setPayoutError('Minimum withdrawal is ₹500'); return; }
     if (amount > withdrawable) { setPayoutError('Insufficient withdrawable balance'); return; }
-    const { error } = await supabase.from('payout_requests').insert({
+    const { error } = await db.from('payout_requests').insert({
       user_id: user.id, amount, method: payoutForm.method,
       account_details: { account: payoutForm.account },
     });
@@ -50,14 +52,12 @@ export default function Referrals() {
     <DashboardLayout>
       <div className="p-6 space-y-6 max-w-2xl">
         <h1 className="text-lg font-semibold text-foreground">Referral Program</h1>
-
         <div className="bg-surface border border-border rounded p-5">
           <p className="label-caps mb-3">YOUR REFERRAL LINK</p>
           <div className="flex gap-2">
             <div className="flex-1 bg-background border border-border rounded px-3 py-2.5 font-mono text-xs text-foreground-muted truncate">{referralLink}</div>
             <button onClick={copyLink} className="flex items-center gap-1.5 px-3 py-2.5 bg-primary text-primary-foreground rounded text-xs font-semibold hover:opacity-90 transition-opacity">
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? 'Copied!' : 'Copy'}
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}{copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3 mt-4">
@@ -108,7 +108,7 @@ export default function Referrals() {
               <div><label className="label-caps block mb-1.5">{payoutForm.method === 'upi' ? 'UPI ID' : 'PAYPAL EMAIL'}</label>
                 <input type="text" value={payoutForm.account} onChange={e => setPayoutForm(f => ({ ...f, account: e.target.value }))} required placeholder={payoutForm.method === 'upi' ? 'user@upi' : 'user@email.com'} className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/60 font-mono" /></div>
               {payoutError && <p className="text-xs text-spend">{payoutError}</p>}
-              <p className="text-xs text-foreground-dim">Minimum ₹500 · Withdrawable balance: <span className="text-foreground font-mono">₹{withdrawable.toFixed(2)}</span></p>
+              <p className="text-xs text-foreground-dim">Minimum ₹500 · Withdrawable: <span className="text-foreground font-mono">₹{withdrawable.toFixed(2)}</span></p>
               <button type="submit" className="w-full py-2.5 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity">Submit Withdrawal Request</button>
             </form>
           )}

@@ -6,6 +6,8 @@ import { Database } from '@/lib/database.types';
 import { ArrowUpRight, ArrowDownRight, ShoppingCart } from 'lucide-react';
 
 type Transaction = Database['public']['Tables']['wallet_transactions']['Row'];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 
 const PACKAGES = [
   { name: 'Starter', points: 500, price: 499, currency: '₹' },
@@ -14,28 +16,25 @@ const PACKAGES = [
 ];
 
 export default function Wallet() {
-  const { profile, user, refreshProfile } = useAuth();
+  const { profile, user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from('wallet_transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50)
-      .then(({ data }) => { if (data) setTransactions(data); setLoading(false); });
+    db.from('wallet_transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50)
+      .then(({ data }: { data: Transaction[] }) => { if (data) setTransactions(data); setLoading(false); });
   }, [user?.id]);
 
   const handlePurchase = async (pkg: typeof PACKAGES[0]) => {
     if (!user?.id || !profile) return;
     setPurchasing(pkg.name);
-    // Simulate purchase flow (real integration needs Razorpay/Stripe)
-    const { error } = await supabase.from('payments').insert({
+    const { error } = await db.from('payments').insert({
       user_id: user.id, amount: pkg.price, currency: 'INR', points: pkg.points,
       status: 'pending', gateway: 'manual', package_name: pkg.name,
     });
-    if (!error) {
-      alert(`Payment flow for ${pkg.name} (${pkg.currency}${pkg.price}) initiated. Connect a payment gateway to complete.`);
-    }
+    if (!error) alert(`Payment flow for ${pkg.name} (${pkg.currency}${pkg.price}) initiated. Connect Razorpay/Stripe to complete.`);
     setPurchasing(null);
   };
 
@@ -46,7 +45,6 @@ export default function Wallet() {
     <DashboardLayout>
       <div className="p-6 space-y-6">
         <h1 className="text-lg font-semibold text-foreground">Wallet</h1>
-
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: 'BALANCE', value: profile?.points_balance?.toLocaleString() ?? 0, cls: 'value-earn' },
@@ -74,13 +72,9 @@ export default function Wallet() {
                   <span className="font-mono text-lg font-semibold text-foreground">{pkg.currency}{pkg.price.toLocaleString()}</span>
                   <span className="label-caps text-foreground-dim">{(pkg.price / pkg.points * 100).toFixed(1)}P/PT</span>
                 </div>
-                <button
-                  onClick={() => handlePurchase(pkg)}
-                  disabled={purchasing === pkg.name}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 shadow-cta"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  {purchasing === pkg.name ? 'Processing...' : 'Purchase'}
+                <button onClick={() => handlePurchase(pkg)} disabled={purchasing === pkg.name}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 shadow-cta">
+                  <ShoppingCart className="w-4 h-4" />{purchasing === pkg.name ? 'Processing...' : 'Purchase'}
                 </button>
               </div>
             ))}
@@ -93,23 +87,19 @@ export default function Wallet() {
             <div className="grid grid-cols-[1fr_120px_100px_80px] px-5 py-2.5 bg-surface-elevated border-b border-border">
               {['DESCRIPTION', 'DATE', 'TYPE', 'AMOUNT'].map(h => <span key={h} className="label-caps">{h}</span>)}
             </div>
-            {loading ? (
-              <div className="p-6 text-center"><p className="label-caps animate-pulse">LOADING...</p></div>
-            ) : transactions.length === 0 ? (
-              <div className="p-6 text-center"><p className="text-sm text-foreground-muted">No transactions yet.</p></div>
-            ) : transactions.map(tx => (
-              <div key={tx.id} className="grid grid-cols-[1fr_120px_100px_80px] px-5 py-3 border-b border-border-subtle last:border-0 hover:bg-surface-elevated transition-colors">
-                <span className="text-xs text-foreground truncate">{tx.description ?? '—'}</span>
-                <span className="font-mono text-xs text-foreground-muted">{new Date(tx.created_at).toLocaleDateString()}</span>
-                <span className="label-caps">{tx.transaction_type.toUpperCase()}</span>
-                <div className="flex items-center gap-1">
-                  {tx.points > 0 ? <ArrowUpRight className="w-3 h-3 text-earn" /> : <ArrowDownRight className="w-3 h-3 text-spend" />}
-                  <span className={`font-mono text-xs font-semibold ${txTypeColor(tx.transaction_type)}`}>
-                    {txTypeSign(tx)}{tx.points}
-                  </span>
+            {loading ? <div className="p-6 text-center"><p className="label-caps animate-pulse">LOADING...</p></div>
+              : transactions.length === 0 ? <div className="p-6 text-center"><p className="text-sm text-foreground-muted">No transactions yet.</p></div>
+              : transactions.map(tx => (
+                <div key={tx.id} className="grid grid-cols-[1fr_120px_100px_80px] px-5 py-3 border-b border-border-subtle last:border-0 hover:bg-surface-elevated transition-colors">
+                  <span className="text-xs text-foreground truncate">{tx.description ?? '—'}</span>
+                  <span className="font-mono text-xs text-foreground-muted">{new Date(tx.created_at).toLocaleDateString()}</span>
+                  <span className="label-caps">{tx.transaction_type.toUpperCase()}</span>
+                  <div className="flex items-center gap-1">
+                    {tx.points > 0 ? <ArrowUpRight className="w-3 h-3 text-earn" /> : <ArrowDownRight className="w-3 h-3 text-spend" />}
+                    <span className={`font-mono text-xs font-semibold ${txTypeColor(tx.transaction_type)}`}>{txTypeSign(tx)}{tx.points}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </div>
