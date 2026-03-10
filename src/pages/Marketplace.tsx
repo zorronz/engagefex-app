@@ -48,7 +48,10 @@ export default function Marketplace() {
       .from('task_completions')
       .select('task_id')
       .eq('user_id', user.id);
-    if (data) setCompletedTaskIds(new Set(data.map(c => c.task_id)));
+    if (data) {
+      const ids = (data as { task_id: string }[]).map(c => c.task_id);
+      setCompletedTaskIds(new Set(ids));
+    }
   }, [user?.id]);
 
   const fetchActiveCampaigns = useCallback(async () => {
