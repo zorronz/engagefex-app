@@ -35,7 +35,8 @@ export default function Admin() {
     details?: Record<string, unknown>
   ) => {
     if (!user) return;
-    await supabase.from('admin_activity_logs').insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from('admin_activity_logs') as any).insert({
       admin_id: user.id,
       action,
       target_type: targetType,
