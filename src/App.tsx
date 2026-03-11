@@ -15,17 +15,20 @@ import Referrals from "./pages/Referrals.tsx";
 import Admin from "./pages/Admin.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import ChangePassword from "./pages/ChangePassword.tsx";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, mustChangePassword } = useAuth();
   if (loading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="font-mono text-xs text-foreground-muted animate-pulse">LOADING...</div>
     </div>
   );
   if (!user) return <Navigate to="/auth" replace />;
+  // Force password change before any protected page
+  if (mustChangePassword) return <Navigate to="/change-password" replace />;
   return <>{children}</>;
 }
 
@@ -49,6 +52,8 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/ref/:code" element={<AuthPage />} />
+            {/* Force password change — accessible when logged in */}
+            <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
             <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
