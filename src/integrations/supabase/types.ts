@@ -176,6 +176,7 @@ export type Database = {
           is_banned: boolean
           is_premium: boolean
           last_seen_at: string | null
+          must_change_password: boolean
           name: string
           points_balance: number
           points_earned: number
@@ -202,6 +203,7 @@ export type Database = {
           is_banned?: boolean
           is_premium?: boolean
           last_seen_at?: string | null
+          must_change_password?: boolean
           name: string
           points_balance?: number
           points_earned?: number
@@ -228,6 +230,7 @@ export type Database = {
           is_banned?: boolean
           is_premium?: boolean
           last_seen_at?: string | null
+          must_change_password?: boolean
           name?: string
           points_balance?: number
           points_earned?: number
