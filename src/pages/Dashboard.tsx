@@ -4,18 +4,50 @@ import { StatCard, PlatformBadge, TaskTypeBadge } from '@/components/ui/DataComp
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-import { CheckCircle2, ArrowUpRight, ArrowDownRight, Zap } from 'lucide-react';
+import { CheckCircle2, ArrowUpRight, ArrowDownRight, Zap, Clock, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 type Transaction = Tables<'wallet_transactions'>;
 type Completion = Tables<'task_completions'> & {
   tasks: Tables<'tasks'>;
 };
 
+// 72-hour countdown from account creation
+function useUpgradeTimer(createdAt: string | undefined) {
+  const [remaining, setRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!createdAt) return;
+    const end = new Date(createdAt).getTime() + 72 * 60 * 60 * 1000;
+    const tick = () => {
+      const left = end - Date.now();
+      setRemaining(left > 0 ? left : 0);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [createdAt]);
+
+  return remaining;
+}
+
+function formatCountdown(ms: number) {
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 export default function Dashboard() {
   const { profile, refreshProfile } = useAuth();
   const [recentTx, setRecentTx] = useState<Transaction[]>([]);
   const [recentCompletions, setRecentCompletions] = useState<Completion[]>([]);
   const [loadingTx, setLoadingTx] = useState(true);
+
+  const remaining = useUpgradeTimer(profile?.created_at);
+
+  // Show timer banner if: account < 72h old, not premium, welcome offer not dismissed via upgrade
+  const showTimer = !profile?.is_premium && remaining !== null && remaining > 0;
 
   useEffect(() => {
     refreshProfile();
@@ -80,6 +112,31 @@ export default function Dashboard() {
   return (
     <DashboardLayout rightPanel={rightPanel} rightPanelTitle="TRANSACTION HISTORY">
       <div className="p-6 space-y-6 max-w-3xl">
+
+        {/* 72-Hour Upgrade Timer Banner */}
+        {showTimer && remaining !== null && (
+          <div className="flex items-center justify-between gap-4 px-4 py-3 bg-primary/8 border border-primary/25 rounded-lg">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-4 h-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-foreground">Limited Welcome Offer</p>
+                <p className="text-xs text-foreground-muted">Upgrade within{' '}
+                  <span className="font-mono text-primary font-semibold">{formatCountdown(remaining)}</span>
+                  {' '}to unlock your special discount
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/wallet"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-semibold hover:opacity-90 transition-opacity flex-shrink-0 shadow-cta"
+            >
+              Upgrade <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -148,7 +205,7 @@ export default function Dashboard() {
                 <div key={c.id} className="flex items-center gap-3 px-4 py-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <PlatformBadge platform={c.tasks?.platform as 'instagram' | 'facebook' | 'youtube'} />
+                      <PlatformBadge platform={c.tasks?.platform as 'instagram' | 'facebook' | 'youtube' | 'linkedin'} />
                       <TaskTypeBadge taskType={c.tasks?.task_type as 'like' | 'comment' | 'subscribe'} />
                     </div>
                     <p className="text-xs text-foreground-dim font-mono">
@@ -185,6 +242,7 @@ export default function Dashboard() {
               { platform: 'Facebook', task: 'Comment', earn: 8, cost: 12 },
               { platform: 'YouTube', task: 'Comment', earn: 10, cost: 15 },
               { platform: 'YouTube', task: 'Subscribe', earn: 12, cost: 18 },
+              { platform: 'LinkedIn', task: 'Comment', earn: 10, cost: 15 },
             ].map((r, i) => (
               <div key={i} className="grid grid-cols-4 px-4 py-2.5 border-b border-border-subtle last:border-0 hover:bg-surface-elevated transition-colors">
                 <span className="text-xs text-foreground font-mono">{r.task}</span>

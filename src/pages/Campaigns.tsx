@@ -9,12 +9,34 @@ import { Plus, Zap, AlertCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, 
 type Task = Tables<'tasks'>;
 type Completion = Tables<'task_completions'> & { profiles?: { name: string; email: string; trust_score: number } | null };
 
+// Fixed point economy — mirrors point_economy table defaults
+const ECONOMY: Record<string, Record<string, { earn: number; cost: number }>> = {
+  instagram: { like: { earn: 2, cost: 4 }, comment: { earn: 8, cost: 12 } },
+  facebook:  { like: { earn: 2, cost: 4 }, comment: { earn: 8, cost: 12 } },
+  youtube:   { comment: { earn: 10, cost: 15 }, subscribe: { earn: 12, cost: 18 } },
+  linkedin:  { comment: { earn: 10, cost: 15 } },
+};
+
+// Task types available per platform
+const TASK_TYPES: Record<string, string[]> = {
+  instagram: ['like', 'comment'],
+  facebook:  ['like', 'comment'],
+  youtube:   ['comment', 'subscribe'],
+  linkedin:  ['comment'],
+};
+
 export default function Campaigns() {
   const { user, profile, refreshProfile } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ platform: 'instagram', task_type: 'like', post_url: '', title: '', total_actions: 10, reward_points: 4 });
+  const [form, setForm] = useState({
+    platform: 'instagram',
+    task_type: 'like',
+    post_url: '',
+    title: '',
+    total_actions: 10,
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,6 +46,17 @@ export default function Campaigns() {
   const [loadingCompletions, setLoadingCompletions] = useState<Record<string, boolean>>({});
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  // Derived economy values
+  const economy = ECONOMY[form.platform]?.[form.task_type] ?? { earn: 0, cost: 0 };
+  const rewardPoints = economy.cost; // cost to creator = reward to worker
+  const totalCost = rewardPoints * form.total_actions;
+
+  // When platform changes, reset task type to first valid option
+  const handlePlatformChange = (platform: string) => {
+    const types = TASK_TYPES[platform] ?? ['comment'];
+    setForm(f => ({ ...f, platform, task_type: types[0] }));
+  };
+
   const fetchTasks = useCallback(async () => {
     if (!user?.id) return;
     const { data } = await supabase.from('tasks').select('*').eq('owner_id', user.id).order('created_at', { ascending: false });
@@ -32,8 +65,6 @@ export default function Campaigns() {
   }, [user?.id]);
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
-
-  const totalCost = form.reward_points * form.total_actions;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,11 +77,11 @@ export default function Campaigns() {
     try {
       const { error: taskError } = await supabase.from('tasks').insert({
         owner_id: user.id,
-        platform: form.platform as 'instagram' | 'facebook' | 'youtube',
+        platform: form.platform as 'instagram' | 'facebook' | 'youtube' | 'linkedin',
         task_type: form.task_type as 'like' | 'comment' | 'subscribe',
         post_url: form.post_url,
         title: form.title || null,
-        reward_points: form.reward_points,
+        reward_points: rewardPoints,
         total_actions: form.total_actions,
       });
       if (taskError) throw new Error(taskError.message);
@@ -71,6 +102,7 @@ export default function Campaigns() {
 
       await refreshProfile();
       setShowForm(false);
+      setForm({ platform: 'instagram', task_type: 'like', post_url: '', title: '', total_actions: 10 });
       fetchTasks();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed');
@@ -112,10 +144,8 @@ export default function Campaigns() {
     }).eq('id', completionId);
 
     if (!error) {
-      // Refresh completions for this task
       const { data } = await supabase.from('task_completions').select('*').eq('task_id', taskId).order('created_at', { ascending: false });
       setCompletions(prev => ({ ...prev, [taskId]: (data ?? []) as Completion[] }));
-      // Refresh tasks to see updated progress
       fetchTasks();
       await refreshProfile();
     }
@@ -140,70 +170,114 @@ export default function Campaigns() {
           </button>
         </div>
 
-        {/* Create form */}
+        {/* Create form with live preview */}
         {showForm && (
-          <div className="bg-surface border border-border rounded p-5">
-            <p className="label-caps mb-4">CREATE CAMPAIGN</p>
-            {error && (
-              <div className="flex items-center gap-2 p-2.5 mb-3 bg-spend-dim border border-spend/20 rounded text-sm text-spend">
-                <AlertCircle className="w-3.5 h-3.5" />{error}
-              </div>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label-caps block mb-1.5">PLATFORM</label>
-                  <select value={form.platform} onChange={e => setForm(f => ({ ...f, platform: e.target.value }))}
-                    className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/60 font-mono">
-                    <option value="instagram">Instagram</option>
-                    <option value="facebook">Facebook</option>
-                    <option value="youtube">YouTube</option>
-                  </select>
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-4">
+            {/* Form */}
+            <div className="bg-surface border border-border rounded p-5">
+              <p className="label-caps mb-4">CREATE CAMPAIGN</p>
+              {error && (
+                <div className="flex items-center gap-2 p-2.5 mb-3 bg-spend-dim border border-spend/20 rounded text-sm text-spend">
+                  <AlertCircle className="w-3.5 h-3.5" />{error}
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="label-caps block mb-1.5">PLATFORM</label>
+                    <select value={form.platform} onChange={e => handlePlatformChange(e.target.value)}
+                      className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/60 font-mono">
+                      <option value="instagram">Instagram</option>
+                      <option value="facebook">Facebook</option>
+                      <option value="youtube">YouTube</option>
+                      <option value="linkedin">LinkedIn</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label-caps block mb-1.5">TASK TYPE</label>
+                    <select value={form.task_type} onChange={e => setForm(f => ({ ...f, task_type: e.target.value }))}
+                      className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/60 font-mono">
+                      {(TASK_TYPES[form.platform] ?? ['comment']).map(t => (
+                        <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div>
-                  <label className="label-caps block mb-1.5">TASK TYPE</label>
-                  <select value={form.task_type} onChange={e => setForm(f => ({ ...f, task_type: e.target.value }))}
-                    className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/60 font-mono">
-                    <option value="like">Like</option>
-                    <option value="comment">Comment</option>
-                    <option value="subscribe">Subscribe</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="label-caps block mb-1.5">POST URL</label>
-                <input type="url" value={form.post_url} onChange={e => setForm(f => ({ ...f, post_url: e.target.value }))} required placeholder="https://..."
-                  className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/60 font-mono" />
-              </div>
-              <div>
-                <label className="label-caps block mb-1.5">TITLE <span className="text-foreground-dim normal-case">(optional)</span></label>
-                <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Campaign description"
-                  className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/60" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label-caps block mb-1.5">REWARD / ACTION</label>
-                  <input type="number" min={1} value={form.reward_points} onChange={e => setForm(f => ({ ...f, reward_points: +e.target.value }))}
-                    className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/60 font-mono" />
+                  <label className="label-caps block mb-1.5">POST URL</label>
+                  <input type="url" value={form.post_url} onChange={e => setForm(f => ({ ...f, post_url: e.target.value }))} required placeholder="https://..."
+                    className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/60 font-mono" />
                 </div>
                 <div>
-                  <label className="label-caps block mb-1.5">TOTAL ACTIONS</label>
+                  <label className="label-caps block mb-1.5">TITLE <span className="text-foreground-dim normal-case">(optional)</span></label>
+                  <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Campaign description"
+                    className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/60" />
+                </div>
+                <div>
+                  <label className="label-caps block mb-1.5">NUMBER OF PARTICIPANTS</label>
                   <input type="number" min={1} max={1000} value={form.total_actions} onChange={e => setForm(f => ({ ...f, total_actions: +e.target.value }))}
                     className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/60 font-mono" />
+                  <p className="text-xs text-foreground-dim mt-1">How many users should complete this task</p>
                 </div>
+                <div className="flex items-center justify-between py-2 border-t border-border">
+                  <div><span className="label-caps">TOTAL COST: </span><span className="font-mono text-sm value-spend font-semibold">{totalCost} pts</span></div>
+                  <span className="label-caps">BALANCE: <span className="font-mono text-earn">{profile?.points_balance ?? 0}</span></span>
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-border rounded text-sm text-foreground-muted hover:text-foreground transition-colors">Cancel</button>
+                  <button type="submit" disabled={submitting || (profile?.points_balance ?? 0) < totalCost}
+                    className="flex-1 py-2.5 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity">
+                    {submitting ? 'Creating...' : 'Create Campaign'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Live Preview Panel */}
+            <div className="bg-surface border border-primary/20 rounded p-5 flex flex-col gap-4 h-fit">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                <p className="label-caps text-primary">CAMPAIGN PREVIEW</p>
               </div>
-              <div className="flex items-center justify-between py-2 border-t border-border">
-                <div><span className="label-caps">TOTAL COST: </span><span className="font-mono text-sm value-spend font-semibold">{totalCost} pts</span></div>
-                <span className="label-caps">BALANCE: <span className="font-mono text-earn">{profile?.points_balance ?? 0}</span></span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                  <span className="label-caps">PLATFORM</span>
+                  <PlatformBadge platform={form.platform as 'instagram' | 'facebook' | 'youtube' | 'linkedin'} />
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                  <span className="label-caps">TASK TYPE</span>
+                  <TaskTypeBadge taskType={form.task_type as 'like' | 'comment' | 'subscribe'} />
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                  <span className="label-caps">POINTS PER USER</span>
+                  <span className="font-mono text-sm value-earn font-semibold">+{economy.earn} pts</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                  <span className="label-caps">COST PER ACTION</span>
+                  <span className="font-mono text-sm value-spend font-semibold">{economy.cost} pts</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+                  <span className="label-caps">PARTICIPANTS</span>
+                  <span className="font-mono text-sm text-foreground font-semibold">{form.total_actions}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 bg-spend-dim rounded px-3 -mx-1">
+                  <span className="label-caps text-spend">TOTAL COST</span>
+                  <span className="font-mono text-lg value-spend font-bold">{totalCost} pts</span>
+                </div>
+                {form.post_url && (
+                  <div className="flex items-center gap-1 py-1">
+                    <ExternalLink className="w-3 h-3 text-foreground-dim" />
+                    <span className="text-xs text-foreground-dim truncate font-mono">{form.post_url.substring(0, 35)}…</span>
+                  </div>
+                )}
+                {(profile?.points_balance ?? 0) < totalCost && totalCost > 0 && (
+                  <div className="flex items-center gap-2 p-2 bg-spend-dim border border-spend/20 rounded text-xs text-spend">
+                    <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                    Insufficient balance ({profile?.points_balance ?? 0} pts)
+                  </div>
+                )}
               </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-border rounded text-sm text-foreground-muted hover:text-foreground transition-colors">Cancel</button>
-                <button type="submit" disabled={submitting || (profile?.points_balance ?? 0) < totalCost}
-                  className="flex-1 py-2.5 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity">
-                  {submitting ? 'Creating...' : 'Create Campaign'}
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         )}
 
@@ -231,7 +305,7 @@ export default function Campaigns() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center"><PlatformBadge platform={task.platform as 'instagram' | 'facebook' | 'youtube'} /></div>
+                  <div className="flex items-center"><PlatformBadge platform={task.platform as 'instagram' | 'facebook' | 'youtube' | 'linkedin'} /></div>
                   <div className="flex items-center"><TaskTypeBadge taskType={task.task_type as 'like' | 'comment' | 'subscribe'} /></div>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs text-foreground">{task.completed_actions}/{task.total_actions}</span>

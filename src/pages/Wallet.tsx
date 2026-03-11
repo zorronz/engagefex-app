@@ -3,9 +3,20 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-import { ArrowUpRight, ArrowDownRight, ShoppingCart, ExternalLink } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, ShoppingCart, ExternalLink, Crown, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 type Transaction = Tables<'wallet_transactions'>;
+
+interface SubPlan {
+  id: string;
+  name: string;
+  monthly_credits: number;
+  price_inr: number;
+  price_usd: number;
+  features: string[];
+  is_popular: boolean;
+}
 
 const PACKAGES = [
   { name: 'Starter', points: 500, price: 499, currency: '₹', priceUSD: 5.99 },
@@ -13,18 +24,34 @@ const PACKAGES = [
   { name: 'Pro', points: 5000, price: 2999, currency: '₹', priceUSD: 35.99 },
 ];
 
+// Simple currency detector
+const useINR = () => new Date().getTimezoneOffset() === -330;
+
 export default function Wallet() {
   const { profile, user, refreshProfile } = useAuth();
+  const isINR = useINR();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [paymentNote, setPaymentNote] = useState('');
+  const [subPlans, setSubPlans] = useState<SubPlan[]>([]);
 
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from('wallet_transactions').select('*').eq('user_id', user.id)
-      .order('created_at', { ascending: false }).limit(50)
-      .then(({ data }) => { if (data) setTransactions(data); setLoading(false); });
+    Promise.all([
+      supabase.from('wallet_transactions').select('*').eq('user_id', user.id)
+        .order('created_at', { ascending: false }).limit(50),
+      supabase.from('subscription_plans').select('*').eq('is_active', true).order('sort_order'),
+    ]).then(([txRes, plansRes]) => {
+      if (txRes.data) setTransactions(txRes.data);
+      if (plansRes.data) setSubPlans(plansRes.data.map(p => ({
+        ...p,
+        price_inr: Number(p.price_inr),
+        price_usd: Number(p.price_usd),
+        features: Array.isArray(p.features) ? p.features as string[] : [],
+      })));
+      setLoading(false);
+    });
   }, [user?.id]);
 
   const handlePurchase = async (pkg: typeof PACKAGES[0]) => {
@@ -32,7 +59,6 @@ export default function Wallet() {
     setPurchasing(pkg.name);
     setPaymentNote('');
 
-    // Create a pending payment record
     const { data: payment, error } = await supabase.from('payments').insert({
       user_id: user.id,
       amount: pkg.price,
@@ -49,7 +75,6 @@ export default function Wallet() {
       return;
     }
 
-    // Try to load Razorpay script
     const scriptLoaded = await new Promise<boolean>(resolve => {
       if ((window as unknown as Record<string, unknown>).Razorpay) { resolve(true); return; }
       const s = document.createElement('script');
@@ -65,20 +90,17 @@ export default function Wallet() {
       return;
     }
 
-    // Call edge function to create Razorpay order
     const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
       body: { payment_id: payment.id, amount: pkg.price, currency: 'INR' },
     });
 
     if (orderError || !orderData?.order_id) {
       setPaymentNote('Could not create payment order. Please ensure Razorpay is configured.');
-      // Clean up pending payment
       await supabase.from('payments').update({ status: 'failed' }).eq('id', payment.id);
       setPurchasing(null);
       return;
     }
 
-    // Open Razorpay checkout
     const RazorpayClass = (window as unknown as { Razorpay: new (opts: unknown) => { open: () => void } }).Razorpay;
     const rzp = new RazorpayClass({
       key: orderData.key_id,
@@ -90,7 +112,6 @@ export default function Wallet() {
       prefill: { email: profile.email, name: profile.name },
       theme: { color: '#3b82f6' },
       handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-        // Verify payment via edge function
         const { data: verifyData } = await supabase.functions.invoke('verify-razorpay-payment', {
           body: {
             payment_id: payment.id,
@@ -102,7 +123,6 @@ export default function Wallet() {
         });
         if (verifyData?.success) {
           await refreshProfile();
-          // Refresh transactions
           const { data } = await supabase.from('wallet_transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50);
           if (data) setTransactions(data);
           setPaymentNote(`✓ ${pkg.points} points added to your balance!`);
@@ -115,6 +135,8 @@ export default function Wallet() {
     });
     rzp.open();
   };
+
+  const price = (inr: number, usd: number) => isINR ? `₹${inr}` : `$${usd}`;
 
   const txTypeColor = (t: string) => ['earned', 'bonus', 'referral', 'refunded'].includes(t) ? 'value-earn' : 'value-spend';
   const txTypeSign = (tx: Transaction) => ['earned', 'bonus', 'referral', 'refunded'].includes(tx.transaction_type) ? '+' : '';
@@ -139,14 +161,79 @@ export default function Wallet() {
           ))}
         </div>
 
+        {/* ── Subscription Section ── */}
+        <div>
+          <p className="label-caps mb-3">SUBSCRIPTION</p>
+          <div className="bg-surface border border-border rounded p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Crown className="w-4 h-4 text-foreground-muted" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Current Plan: {profile?.is_premium ? 'Premium' : 'Free'}
+                  </p>
+                  <p className="text-xs text-foreground-muted mt-0.5">
+                    {profile?.is_premium
+                      ? 'You have access to premium features and priority support.'
+                      : 'Upgrade to get monthly credits, higher limits, and priority access.'}
+                  </p>
+                </div>
+              </div>
+              {profile?.is_premium && (
+                <span className="flex items-center gap-1 px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded text-xs text-yellow-400 font-semibold">
+                  Active
+                </span>
+              )}
+            </div>
+
+            {!profile?.is_premium && subPlans.length > 0 && (
+              <div className="space-y-3">
+                <p className="label-caps">UPGRADE TO MONTHLY PLAN</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {subPlans.map(plan => (
+                    <div key={plan.id} className={`relative border rounded-lg p-4 flex flex-col gap-3 ${plan.is_popular ? 'border-primary/50 bg-primary/5' : 'border-border bg-background'}`}>
+                      {plan.is_popular && (
+                        <span className="absolute -top-2.5 left-3 px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full">POPULAR</span>
+                      )}
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{plan.name}</p>
+                        <p className="font-mono text-xl font-bold text-foreground mt-0.5">
+                          {price(plan.price_inr, plan.price_usd)}<span className="text-xs text-foreground-muted font-sans font-normal">/mo</span>
+                        </p>
+                        <p className="text-xs value-earn font-mono mt-0.5">{plan.monthly_credits.toLocaleString()} credits/mo</p>
+                      </div>
+                      <button
+                        onClick={() => setPaymentNote('Subscription checkout coming soon. Please configure your payment gateway in Admin Settings.')}
+                        className={`w-full flex items-center justify-center gap-1.5 py-2 rounded text-xs font-semibold transition-opacity hover:opacity-90 ${plan.is_popular ? 'bg-primary text-primary-foreground shadow-cta' : 'border border-border text-foreground hover:border-primary/50'}`}
+                      >
+                        Subscribe <ArrowRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!profile?.is_premium && subPlans.length === 0 && (
+              <div className="text-center py-4">
+                <p className="text-sm text-foreground-muted mb-3">No subscription plans configured yet.</p>
+                <Link to="/choose-plan" className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity">
+                  View Plans <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            )}
+
+            {paymentNote && (
+              <div className={`flex items-center gap-2 p-3 mt-3 rounded border text-sm ${paymentNote.startsWith('✓') ? 'bg-earn-dim border-earn/20 text-earn' : 'bg-spend-dim border-spend/20 text-spend'}`}>
+                {paymentNote}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Purchase packages */}
         <div>
           <p className="label-caps mb-3">PURCHASE POINTS</p>
-          {paymentNote && (
-            <div className={`flex items-center gap-2 p-3 mb-3 rounded border text-sm ${paymentNote.startsWith('✓') ? 'bg-earn-dim border-earn/20 text-earn' : 'bg-spend-dim border-spend/20 text-spend'}`}>
-              {paymentNote}
-            </div>
-          )}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {PACKAGES.map(pkg => (
               <div key={pkg.name} className={`bg-surface border rounded p-5 relative ${pkg.popular ? 'border-primary/50 shadow-cta' : 'border-border'}`}>
