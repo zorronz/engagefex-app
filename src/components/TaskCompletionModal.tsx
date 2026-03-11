@@ -55,10 +55,7 @@ export default function TaskCompletionModal({ task, onComplete, onClose }: TaskC
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(task.post_url);
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2500);
     } catch {
-      // Fallback for browsers without clipboard API
       const el = document.createElement('textarea');
       el.value = task.post_url;
       el.style.position = 'fixed';
@@ -67,9 +64,10 @@ export default function TaskCompletionModal({ task, onComplete, onClose }: TaskC
       el.select();
       document.execCommand('copy');
       document.body.removeChild(el);
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2500);
     }
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2500);
+    startTimer();
   };
 
   const handleSubmit = async () => {
