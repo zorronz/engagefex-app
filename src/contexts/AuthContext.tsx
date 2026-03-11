@@ -11,6 +11,7 @@ interface AuthContextType {
   profile: Profile | null;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  mustChangePassword: boolean;
   loading: boolean;
   signUp: (email: string, password: string, name: string, referralCode?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
