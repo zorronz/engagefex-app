@@ -10,6 +10,8 @@ import AdminPayments from '@/components/admin/AdminPayments';
 import AdminEconomy from '@/components/admin/AdminEconomy';
 import AdminSecurity from '@/components/admin/AdminSecurity';
 import AdminLogs from '@/components/admin/AdminLogs';
+import AdminPlatformSettings from '@/components/admin/AdminPlatformSettings';
+import AdminPricing from '@/components/admin/AdminPricing';
 import {
   Shield,
   LayoutDashboard,
@@ -20,9 +22,11 @@ import {
   TrendingUp,
   Lock,
   ScrollText,
+  Settings,
+  DollarSign,
 } from 'lucide-react';
 
-type Tab = 'overview' | 'users' | 'tasks' | 'referrals' | 'payments' | 'economy' | 'security' | 'logs';
+type Tab = 'overview' | 'users' | 'tasks' | 'referrals' | 'payments' | 'economy' | 'security' | 'logs' | 'platform' | 'pricing';
 
 export default function Admin() {
   const { user } = useAuth();
