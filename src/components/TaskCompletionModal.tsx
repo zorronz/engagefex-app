@@ -37,10 +37,9 @@ export default function TaskCompletionModal({ task, onComplete, onClose }: TaskC
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, []);
 
-  const handleOpenPost = () => {
-    window.open(task.post_url, '_blank', 'noopener,noreferrer');
+  const startTimer = () => {
+    if (phase !== 'instructions') return;
     setPhase('countdown');
-
     intervalRef.current = setInterval(() => {
       setSecondsLeft(prev => {
         if (prev <= 1) {
