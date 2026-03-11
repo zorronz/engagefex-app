@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { TrendingUp, ArrowRight, Zap, Shield, Users } from 'lucide-react';
+import { TrendingUp, ArrowRight, Zap, Shield, Users, Check, Star, Package } from 'lucide-react';
 
 const Index = () => {
   return (
