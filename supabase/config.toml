@@ -1,1 +1,6 @@
 project_id = "ycnupnhjfcespvqjanaa"
+
+[auth.hook.send_email]
+enabled = true
+uri = "https://ycnupnhjfcespvqjanaa.supabase.co/functions/v1/auth-email-hook"
+secrets = "env(SEND_EMAIL_HOOK_SECRET)"
