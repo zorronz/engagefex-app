@@ -37,10 +37,9 @@ export default function TaskCompletionModal({ task, onComplete, onClose }: TaskC
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, []);
 
-  const handleOpenPost = () => {
-    window.open(task.post_url, '_blank', 'noopener,noreferrer');
+  const startTimer = () => {
+    if (phase !== 'instructions') return;
     setPhase('countdown');
-
     intervalRef.current = setInterval(() => {
       setSecondsLeft(prev => {
         if (prev <= 1) {
@@ -56,10 +55,7 @@ export default function TaskCompletionModal({ task, onComplete, onClose }: TaskC
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(task.post_url);
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2500);
     } catch {
-      // Fallback for browsers without clipboard API
       const el = document.createElement('textarea');
       el.value = task.post_url;
       el.style.position = 'fixed';
@@ -68,9 +64,10 @@ export default function TaskCompletionModal({ task, onComplete, onClose }: TaskC
       el.select();
       document.execCommand('copy');
       document.body.removeChild(el);
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2500);
     }
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2500);
+    startTimer();
   };
 
   const handleSubmit = async () => {
@@ -156,14 +153,17 @@ export default function TaskCompletionModal({ task, onComplete, onClose }: TaskC
               ))}
             </div>
 
-            {/* Open Post button */}
-            <button
-              onClick={handleOpenPost}
+            {/* Open Post button — pure anchor, no JS redirect */}
+            <a
+              href={task.post_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={startTimer}
               className="w-full py-3 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-cta"
             >
               <ExternalLink className="w-4 h-4" />
               Open Post
-            </button>
+            </a>
 
             {/* Mobile notice */}
             <div className="mt-3 flex items-start gap-2 px-3 py-2.5 rounded bg-surface-elevated border border-border-subtle">
@@ -175,14 +175,14 @@ export default function TaskCompletionModal({ task, onComplete, onClose }: TaskC
 
             {/* Copy link fallback */}
             <div className="mt-4 text-center">
-              <p className="text-xs text-foreground-dim mb-2">If the link does not open, click here to copy the link.</p>
+              <p className="text-xs text-foreground-dim mb-2">If the link does not open, copy the link and paste it into a new browser tab.</p>
               <button
                 onClick={handleCopyLink}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-border rounded text-xs text-foreground-muted hover:text-foreground hover:border-foreground-dim transition-colors"
               >
                 {linkCopied
                   ? <><Check className="w-3.5 h-3.5 text-earn" /> Link copied to clipboard</>
-                  : <><Copy className="w-3.5 h-3.5" /> Copy Link</>
+                  : <><Copy className="w-3.5 h-3.5" /> Copy Post Link</>
                 }
               </button>
             </div>
