@@ -103,6 +103,8 @@ export default function Admin() {
         {activeTab === 'economy'   && <AdminEconomy logAction={logAction} />}
         {activeTab === 'security'  && <AdminSecurity />}
         {activeTab === 'logs'      && <AdminLogs />}
+        {activeTab === 'pricing'   && <AdminPricing />}
+        {activeTab === 'platform'  && <AdminPlatformSettings />}
       </div>
     </DashboardLayout>
   );

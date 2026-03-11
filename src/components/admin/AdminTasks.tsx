@@ -49,7 +49,7 @@ export default function AdminTasks({ logAction }: AdminTasksProps) {
 
   if (loading) return <p className="label-caps animate-pulse p-6">LOADING TASKS...</p>;
 
-  const platforms: Platform[] = ['all', 'instagram', 'facebook', 'youtube'];
+  const platforms: Platform[] = ['all', 'instagram', 'facebook', 'youtube', 'linkedin'];
   const statuses: TaskStatus[] = ['all', 'active', 'paused', 'completed', 'expired', 'deleted'];
 
   return (
