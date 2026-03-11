@@ -58,6 +58,8 @@ export default function Admin() {
     { key: 'economy',   icon: TrendingUp,      label: 'Economy' },
     { key: 'security',  icon: Lock,            label: 'Security' },
     { key: 'logs',      icon: ScrollText,      label: 'Activity Logs' },
+    { key: 'pricing',   icon: DollarSign,      label: 'Pricing' },
+    { key: 'platform',  icon: Settings,        label: 'Platform Settings' },
   ];
 
   return (
