@@ -46,7 +46,7 @@ const Index = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link to="/auth?mode=signup" className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity shadow-cta">
-            Start Trading <ArrowRight className="w-4 h-4" />
+            Boost Engagement <ArrowRight className="w-4 h-4" />
           </Link>
           <Link to="/auth" className="flex items-center justify-center gap-2 px-6 py-3 border border-border text-foreground rounded text-sm font-medium hover:border-primary/50 transition-colors">
             Sign In
