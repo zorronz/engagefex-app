@@ -182,7 +182,7 @@ export default function ChoosePlan() {
                     <p className="text-xs text-yellow-400 font-mono">+{pack.bonus_credits} bonus credits</p>
                   )}
                 </div>
-                <button onClick={handleFree}
+                <button onClick={() => navigate('/wallet')}
                   className="w-full py-2 bg-surface-elevated border border-border rounded text-xs font-semibold text-foreground hover:border-primary/50 transition-colors">
                   Buy Pack
                 </button>
