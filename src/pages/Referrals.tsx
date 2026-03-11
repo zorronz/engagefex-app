@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Copy, Check, Users, TrendingUp, Clock, Gift, Star, AlertCircle } from 'lucide-react';
+import { Copy, Check, Users, TrendingUp, Clock, Gift, Star } from 'lucide-react';
 
 type Referral = {
   referred_id: string;
