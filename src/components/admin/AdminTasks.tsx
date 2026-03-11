@@ -15,6 +15,7 @@ const PLATFORM_COLORS: Record<string, string> = {
   instagram: 'text-pink-400',
   facebook: 'text-blue-400',
   youtube: 'text-red-400',
+  linkedin: 'text-sky-400',
 };
 
 export default function AdminTasks({ logAction }: AdminTasksProps) {
