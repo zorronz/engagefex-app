@@ -55,6 +55,7 @@ const App = () => (
             <Route path="/ref/:code" element={<AuthPage />} />
             {/* Force password change — accessible when logged in */}
             <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/choose-plan" element={<ProtectedRoute><ChoosePlan /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
             <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
