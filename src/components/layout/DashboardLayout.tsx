@@ -187,6 +187,9 @@ export default function DashboardLayout({ children, rightPanel, rightPanelTitle 
               <TrendingUp className="w-3 h-3 text-primary-foreground" />
             </div>
             <span className="font-mono text-xs font-bold tracking-wider uppercase">EngageExch.</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/15 text-primary border border-primary/25 select-none leading-none">
+              Beta
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="font-mono text-xs value-earn font-semibold">
