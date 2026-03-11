@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { StatCard, PlatformBadge, TaskTypeBadge } from '@/components/ui/DataComponents';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import { Database } from '@/lib/database.types';
-import { CheckCircle2, Clock, TrendingUp, ArrowUpRight, ArrowDownRight, Zap } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
+import { CheckCircle2, ArrowUpRight, ArrowDownRight, Zap } from 'lucide-react';
 
-type Transaction = Database['public']['Tables']['wallet_transactions']['Row'];
-type Completion = Database['public']['Tables']['task_completions']['Row'] & {
-  tasks: Database['public']['Tables']['tasks']['Row'];
+type Transaction = Tables<'wallet_transactions'>;
+type Completion = Tables<'task_completions'> & {
+  tasks: Tables<'tasks'>;
 };
 
 export default function Dashboard() {
@@ -19,6 +19,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     refreshProfile();
+  }, []);
+
+  useEffect(() => {
     if (!profile?.user_id) return;
 
     const fetchData = async () => {
@@ -43,10 +46,6 @@ export default function Dashboard() {
 
     fetchData();
   }, [profile?.user_id]);
-
-  const trustColor = profile?.trust_score
-    ? profile.trust_score >= 80 ? 'text-earn' : profile.trust_score >= 50 ? 'text-yellow-400' : 'text-spend'
-    : 'text-foreground-muted';
 
   const rightPanel = (
     <div className="p-4 space-y-1">
@@ -103,32 +102,15 @@ export default function Dashboard() {
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard
-            label="BALANCE"
-            value={profile?.points_balance?.toLocaleString() ?? '—'}
-            subValue="points"
-            type="earn"
-          />
+          <StatCard label="BALANCE" value={profile?.points_balance?.toLocaleString() ?? '—'} subValue="points" type="earn" />
           <StatCard
             label="TRUST SCORE"
             value={profile?.trust_score?.toFixed(0) ?? '—'}
             subValue="/100"
-            type={
-              (profile?.trust_score ?? 0) >= 80 ? 'earn'
-              : (profile?.trust_score ?? 0) >= 50 ? 'neutral'
-              : 'spend'
-            }
+            type={(profile?.trust_score ?? 0) >= 80 ? 'earn' : (profile?.trust_score ?? 0) >= 50 ? 'neutral' : 'spend'}
           />
-          <StatCard
-            label="COMPLETED"
-            value={profile?.tasks_completed ?? 0}
-            subValue="tasks"
-          />
-          <StatCard
-            label="SUBMITTED"
-            value={profile?.tasks_submitted ?? 0}
-            subValue="campaigns"
-          />
+          <StatCard label="COMPLETED" value={profile?.tasks_completed ?? 0} subValue="tasks" />
+          <StatCard label="SUBMITTED" value={profile?.tasks_submitted ?? 0} subValue="campaigns" />
         </div>
 
         {/* Secondary stats */}
@@ -156,7 +138,9 @@ export default function Dashboard() {
             <div className="bg-surface border border-border rounded p-8 text-center">
               <CheckCircle2 className="w-6 h-6 text-foreground-dim mx-auto mb-2" />
               <p className="text-sm text-foreground-muted">No tasks completed yet.</p>
-              <p className="text-xs text-foreground-dim mt-1">Visit the <a href="/marketplace" className="text-primary hover:underline">Marketplace</a> to start earning.</p>
+              <p className="text-xs text-foreground-dim mt-1">
+                Visit the <a href="/marketplace" className="text-primary hover:underline">Marketplace</a> to start earning.
+              </p>
             </div>
           ) : (
             <div className="bg-surface border border-border rounded divide-y divide-border-subtle">

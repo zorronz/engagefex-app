@@ -3,13 +3,15 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PlatformBadge, TaskTypeBadge } from '@/components/ui/DataComponents';
 import TaskCompletionModal from '@/components/TaskCompletionModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import { Database } from '@/lib/database.types';
-import { Search, SlidersHorizontal, Zap, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
+import { Search, SlidersHorizontal, Zap, ExternalLink, ChevronUp, ChevronDown, Flag, X, AlertCircle } from 'lucide-react';
 
-type Task = Database['public']['Tables']['tasks']['Row'];
+type Task = Tables<'tasks'>;
 type Platform = 'instagram' | 'facebook' | 'youtube' | 'all';
 type TaskTypeFilter = 'like' | 'comment' | 'subscribe' | 'all';
+
+const REPORT_REASONS = ['Spam / fake post', 'Broken link', 'Inappropriate content', 'Already completed / duplicate', 'Other'];
 
 export default function Marketplace() {
   const { profile, user } = useAuth();
@@ -24,6 +26,14 @@ export default function Marketplace() {
   const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
   const [activeCampaignCount, setActiveCampaignCount] = useState(0);
 
+  // Report modal state
+  const [reportTask, setReportTask] = useState<Task | null>(null);
+  const [reportReason, setReportReason] = useState(REPORT_REASONS[0]);
+  const [reportDescription, setReportDescription] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
+  const [reportError, setReportError] = useState('');
+
   const fetchTasks = useCallback(async () => {
     setLoading(true);
     let query = supabase
@@ -34,8 +44,8 @@ export default function Marketplace() {
       .order('is_boosted', { ascending: false })
       .order(sortField, { ascending: sortDir === 'asc' });
 
-    if (platformFilter !== 'all') query = query.eq('platform', platformFilter);
-    if (typeFilter !== 'all') query = query.eq('task_type', typeFilter);
+    if (platformFilter !== 'all') query = query.eq('platform', platformFilter as 'instagram' | 'facebook' | 'youtube');
+    if (typeFilter !== 'all') query = query.eq('task_type', typeFilter as 'like' | 'comment' | 'subscribe');
 
     const { data } = await query.limit(100);
     if (data) setTasks(data);
@@ -49,8 +59,7 @@ export default function Marketplace() {
       .select('task_id')
       .eq('user_id', user.id);
     if (data) {
-      const ids = (data as { task_id: string }[]).map(c => c.task_id);
-      setCompletedTaskIds(new Set(ids));
+      setCompletedTaskIds(new Set(data.map(c => c.task_id)));
     }
   }, [user?.id]);
 
@@ -70,33 +79,39 @@ export default function Marketplace() {
     fetchActiveCampaigns();
   }, [fetchTasks, fetchCompletions, fetchActiveCampaigns]);
 
-  const handleStartTask = (task: Task) => {
-    setSelectedTask(task);
-  };
-
   const handleComplete = async (commentText?: string) => {
     if (!selectedTask || !user?.id) return;
-
-    const insertData: Database['public']['Tables']['task_completions']['Insert'] = {
+    const { error } = await supabase.from('task_completions').insert({
       task_id: selectedTask.id,
       user_id: user.id,
       status: 'pending',
       comment_text: commentText || null,
       completed_at: new Date().toISOString(),
-    };
-
-    const { error: insertError } = await (supabase.from('task_completions') as ReturnType<typeof supabase.from>).insert(insertData as never);
-    if (insertError) throw new Error(insertError.message);
+    });
+    if (error) throw new Error(error.message);
     setCompletedTaskIds(prev => new Set([...prev, selectedTask.id]));
   };
 
   const toggleSort = (field: 'reward_points' | 'created_at') => {
-    if (sortField === field) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDir('desc');
-    }
+    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortField(field); setSortDir('desc'); }
+  };
+
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reportTask || !user?.id) return;
+    setReportSubmitting(true);
+    setReportError('');
+    const { error } = await supabase.from('reports').insert({
+      reporter_id: user.id,
+      task_id: reportTask.id,
+      reason: reportReason,
+      description: reportDescription || null,
+    });
+    if (error) { setReportError(error.message); setReportSubmitting(false); return; }
+    setReportSuccess(true);
+    setReportSubmitting(false);
+    setTimeout(() => { setReportTask(null); setReportSuccess(false); setReportDescription(''); setReportReason(REPORT_REASONS[0]); }, 1500);
   };
 
   const filteredTasks = tasks.filter(t => {
@@ -107,20 +122,17 @@ export default function Marketplace() {
 
   const SortIcon = ({ field }: { field: string }) => {
     if (sortField !== field) return <ChevronUp className="w-3 h-3 text-foreground-dim" />;
-    return sortDir === 'desc'
-      ? <ChevronDown className="w-3 h-3 text-foreground-muted" />
-      : <ChevronUp className="w-3 h-3 text-foreground-muted" />;
+    return sortDir === 'desc' ? <ChevronDown className="w-3 h-3 text-foreground-muted" /> : <ChevronUp className="w-3 h-3 text-foreground-muted" />;
   };
 
   const maxTasks = profile?.is_premium ? 200 : 30;
-  const tasksToday = 0; // Could track this separately
 
   const rightPanel = (
     <div className="p-4">
       <div className="space-y-3 mb-6">
         <div className="flex justify-between items-center py-2 border-b border-border-subtle">
           <span className="label-caps">DAILY LIMIT</span>
-          <span className="font-mono text-xs text-foreground">{tasksToday}/{maxTasks}</span>
+          <span className="font-mono text-xs text-foreground">0/{maxTasks}</span>
         </div>
         <div className="flex justify-between items-center py-2 border-b border-border-subtle">
           <span className="label-caps">ACTIVE CAMPAIGNS</span>
@@ -142,15 +154,8 @@ export default function Marketplace() {
           <p className="label-caps mb-2 text-foreground-dim">PLATFORM</p>
           <div className="flex flex-wrap gap-1.5">
             {(['all', 'instagram', 'facebook', 'youtube'] as Platform[]).map(p => (
-              <button
-                key={p}
-                onClick={() => setPlatformFilter(p)}
-                className={`px-2 py-1 rounded text-xs font-mono transition-colors ${
-                  platformFilter === p
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-accent text-foreground-muted hover:text-foreground'
-                }`}
-              >
+              <button key={p} onClick={() => setPlatformFilter(p)}
+                className={`px-2 py-1 rounded text-xs font-mono transition-colors ${platformFilter === p ? 'bg-primary text-primary-foreground' : 'bg-accent text-foreground-muted hover:text-foreground'}`}>
                 {p === 'all' ? 'All' : p.charAt(0).toUpperCase() + p.slice(1)}
               </button>
             ))}
@@ -160,15 +165,8 @@ export default function Marketplace() {
           <p className="label-caps mb-2 text-foreground-dim">TASK TYPE</p>
           <div className="flex flex-wrap gap-1.5">
             {(['all', 'like', 'comment', 'subscribe'] as TaskTypeFilter[]).map(t => (
-              <button
-                key={t}
-                onClick={() => setTypeFilter(t)}
-                className={`px-2 py-1 rounded text-xs font-mono transition-colors ${
-                  typeFilter === t
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-accent text-foreground-muted hover:text-foreground'
-                }`}
-              >
+              <button key={t} onClick={() => setTypeFilter(t)}
+                className={`px-2 py-1 rounded text-xs font-mono transition-colors ${typeFilter === t ? 'bg-primary text-primary-foreground' : 'bg-accent text-foreground-muted hover:text-foreground'}`}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
@@ -189,24 +187,17 @@ export default function Marketplace() {
           </div>
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-foreground-dim absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search tasks..."
-              className="pl-8 pr-3 py-2 bg-background border border-border rounded text-xs text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/60 font-sans w-48"
-            />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tasks..."
+              className="pl-8 pr-3 py-2 bg-background border border-border rounded text-xs text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/60 font-sans w-48" />
           </div>
         </div>
 
         {/* Table header */}
-        <div className="grid grid-cols-[2fr_1fr_1fr_80px_100px] gap-3 px-6 py-2 bg-surface-elevated border-b border-border text-left">
+        <div className="grid grid-cols-[2fr_1fr_1fr_80px_120px] gap-3 px-6 py-2 bg-surface-elevated border-b border-border text-left">
           <span className="label-caps">POST / URL</span>
           <span className="label-caps">PLATFORM</span>
           <span className="label-caps">TYPE</span>
-          <button
-            onClick={() => toggleSort('reward_points')}
-            className="flex items-center gap-1 label-caps hover:text-foreground transition-colors"
-          >
+          <button onClick={() => toggleSort('reward_points')} className="flex items-center gap-1 label-caps hover:text-foreground transition-colors">
             REWARD <SortIcon field="reward_points" />
           </button>
           <span className="label-caps text-right">ACTION</span>
@@ -217,7 +208,7 @@ export default function Marketplace() {
           {loading ? (
             <div className="space-y-0">
               {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                <div key={i} className="grid grid-cols-[2fr_1fr_1fr_80px_100px] gap-3 px-6 py-3.5 border-b border-border-subtle animate-pulse">
+                <div key={i} className="grid grid-cols-[2fr_1fr_1fr_80px_120px] gap-3 px-6 py-3.5 border-b border-border-subtle animate-pulse">
                   <div className="h-4 bg-surface-elevated rounded w-3/4" />
                   <div className="h-4 bg-surface-elevated rounded w-1/2" />
                   <div className="h-4 bg-surface-elevated rounded w-1/2" />
@@ -236,22 +227,15 @@ export default function Marketplace() {
             filteredTasks.map(task => {
               const isCompleted = completedTaskIds.has(task.id);
               const isOwn = task.owner_id === user?.id;
-
               return (
-                <div
-                  key={task.id}
-                  className={`ticker-row grid grid-cols-[2fr_1fr_1fr_80px_100px] gap-3 px-6 py-3.5 ${task.is_boosted ? 'bg-primary/5' : ''}`}
-                >
+                <div key={task.id}
+                  className={`ticker-row grid grid-cols-[2fr_1fr_1fr_80px_120px] gap-3 px-6 py-3.5 ${task.is_boosted ? 'bg-primary/5' : ''}`}>
                   <div className="flex items-center gap-2 min-w-0">
                     {task.is_boosted && <Zap className="w-3 h-3 text-yellow-400 flex-shrink-0" />}
                     <div className="min-w-0">
                       <p className="text-xs text-foreground truncate">{task.title || 'Untitled task'}</p>
-                      <a
-                        href={task.post_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-foreground-dim hover:text-primary transition-colors font-mono truncate max-w-xs"
-                      >
+                      <a href={task.post_url} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-foreground-dim hover:text-primary transition-colors font-mono truncate max-w-xs">
                         {task.post_url.substring(0, 40)}…
                         <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
                       </a>
@@ -266,18 +250,22 @@ export default function Marketplace() {
                   <div className="flex items-center">
                     <span className="font-mono text-sm value-earn font-semibold">+{task.reward_points}</span>
                   </div>
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-end gap-1.5">
                     {isOwn ? (
                       <span className="label-caps text-foreground-dim">YOUR TASK</span>
                     ) : isCompleted ? (
                       <span className="label-caps text-earn">SUBMITTED</span>
                     ) : (
-                      <button
-                        onClick={() => handleStartTask(task)}
-                        className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-semibold hover:opacity-90 transition-opacity shadow-cta"
-                      >
-                        Start Task
-                      </button>
+                      <>
+                        <button onClick={() => setReportTask(task)}
+                          className="p-1.5 text-foreground-dim hover:text-spend transition-colors rounded hover:bg-spend/10" title="Report task">
+                          <Flag className="w-3 h-3" />
+                        </button>
+                        <button onClick={() => setSelectedTask(task)}
+                          className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-semibold hover:opacity-90 transition-opacity shadow-cta">
+                          Start
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -287,12 +275,58 @@ export default function Marketplace() {
         </div>
       </div>
 
+      {/* Task completion modal */}
       {selectedTask && (
-        <TaskCompletionModal
-          task={selectedTask}
-          onComplete={handleComplete}
-          onClose={() => setSelectedTask(null)}
-        />
+        <TaskCompletionModal task={selectedTask} onComplete={handleComplete} onClose={() => setSelectedTask(null)} />
+      )}
+
+      {/* Report modal */}
+      {reportTask && (
+        <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-surface border border-border rounded shadow-lg">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Flag className="w-3.5 h-3.5 text-spend" />
+                <p className="label-caps">REPORT TASK</p>
+              </div>
+              <button onClick={() => setReportTask(null)} className="text-foreground-dim hover:text-foreground">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {reportSuccess ? (
+              <div className="p-8 text-center">
+                <p className="font-mono text-sm value-earn">Report submitted.</p>
+                <p className="text-xs text-foreground-muted mt-1">Thank you for keeping the marketplace clean.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleReportSubmit} className="p-5 space-y-4">
+                <div>
+                  <label className="label-caps block mb-1.5">REASON</label>
+                  <select value={reportReason} onChange={e => setReportReason(e.target.value)}
+                    className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/60 font-sans">
+                    {REPORT_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label-caps block mb-1.5">DETAILS <span className="text-foreground-dim normal-case">(optional)</span></label>
+                  <textarea value={reportDescription} onChange={e => setReportDescription(e.target.value)}
+                    placeholder="Describe the issue..." rows={3} className="w-full bg-background border border-border rounded px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/60 resize-none" />
+                </div>
+                {reportError && (
+                  <div className="flex items-center gap-2 p-2.5 bg-spend-dim border border-spend/20 rounded text-xs text-spend">
+                    <AlertCircle className="w-3.5 h-3.5" />{reportError}
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setReportTask(null)} className="flex-1 py-2.5 border border-border rounded text-sm text-foreground-muted hover:text-foreground transition-colors">Cancel</button>
+                  <button type="submit" disabled={reportSubmitting} className="flex-1 py-2.5 bg-spend text-spend-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50">
+                    {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
       )}
     </DashboardLayout>
   );
