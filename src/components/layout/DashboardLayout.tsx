@@ -151,6 +151,17 @@ export default function DashboardLayout({ children, rightPanel, rightPanelTitle 
               <span className="text-sm font-medium lg:hidden xl:block">Admin</span>
             </NavLink>
           )}
+          {/* Upgrade button — shown to non-premium users */}
+          {!profile?.is_premium && (
+            <NavLink
+              to="/wallet"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 mx-2 mt-2 rounded bg-primary/10 border border-primary/25 text-primary hover:bg-primary/20 transition-colors"
+            >
+              <ArrowUpCircle className="w-4 h-4 flex-shrink-0" />
+              <span className="text-sm font-semibold lg:hidden xl:block">Upgrade</span>
+            </NavLink>
+          )}
         </nav>
 
         {/* User + signout */}
