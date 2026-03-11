@@ -160,7 +160,14 @@ export default function AuthPage() {
               />
             </div>
             <div>
-              <label className="label-caps block mb-1.5">PASSWORD</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="label-caps">PASSWORD</label>
+                {mode === 'login' && (
+                  <Link to="/forgot-password" className="text-xs text-foreground-muted hover:text-primary transition-colors">
+                    Forgot Password?
+                  </Link>
+                )}
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}

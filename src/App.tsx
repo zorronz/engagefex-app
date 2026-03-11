@@ -13,6 +13,8 @@ import Campaigns from "./pages/Campaigns.tsx";
 import Wallet from "./pages/Wallet.tsx";
 import Referrals from "./pages/Referrals.tsx";
 import Admin from "./pages/Admin.tsx";
+import ForgotPassword from "./pages/ForgotPassword.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 
 const queryClient = new QueryClient();
 
