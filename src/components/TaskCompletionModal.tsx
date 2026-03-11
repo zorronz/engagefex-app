@@ -175,14 +175,14 @@ export default function TaskCompletionModal({ task, onComplete, onClose }: TaskC
 
             {/* Copy link fallback */}
             <div className="mt-4 text-center">
-              <p className="text-xs text-foreground-dim mb-2">If the link does not open, click here to copy the link.</p>
+              <p className="text-xs text-foreground-dim mb-2">If the link does not open, copy the link and paste it into a new browser tab.</p>
               <button
                 onClick={handleCopyLink}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-border rounded text-xs text-foreground-muted hover:text-foreground hover:border-foreground-dim transition-colors"
               >
                 {linkCopied
                   ? <><Check className="w-3.5 h-3.5 text-earn" /> Link copied to clipboard</>
-                  : <><Copy className="w-3.5 h-3.5" /> Copy Link</>
+                  : <><Copy className="w-3.5 h-3.5" /> Copy Post Link</>
                 }
               </button>
             </div>
