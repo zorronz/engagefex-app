@@ -11,6 +11,7 @@ interface AuthContextType {
   profile: Profile | null;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  mustChangePassword: boolean;
   loading: boolean;
   signUp: (email: string, password: string, name: string, referralCode?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -26,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -34,7 +36,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .select('*')
       .eq('user_id', userId)
       .single();
-    if (data) setProfile(data);
+    if (data) {
+      setProfile(data);
+      // must_change_password may not be in generated types yet — cast safely
+      setMustChangePassword(!!((data as Record<string, unknown>).must_change_password));
+    }
 
     const { data: roleData } = await supabase
       .from('user_roles')
@@ -63,6 +69,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setProfile(null);
           setIsAdmin(false);
+          setIsSuperAdmin(false);
+          setMustChangePassword(false);
         }
         setLoading(false);
       }
@@ -103,7 +111,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, isAdmin, isSuperAdmin, loading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{
+      user, session, profile,
+      isAdmin, isSuperAdmin, mustChangePassword,
+      loading,
+      signUp, signIn, signOut, refreshProfile,
+    }}>
       {children}
     </AuthContext.Provider>
   );
