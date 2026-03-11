@@ -10,6 +10,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   loading: boolean;
   signUp: (email: string, password: string, name: string, referralCode?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -24,6 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -38,9 +40,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', 'admin')
-      .single();
-    setIsAdmin(!!roleData);
+      .in('role', ['admin', 'super_admin']);
+
+    const roles = (roleData ?? []).map((r: { role: string }) => r.role);
+    const hasSuperAdmin = roles.includes('super_admin');
+    const hasAdmin = roles.includes('admin') || hasSuperAdmin;
+    setIsAdmin(hasAdmin);
+    setIsSuperAdmin(hasSuperAdmin);
   };
 
   const refreshProfile = async () => {
@@ -97,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, isAdmin, loading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, isAdmin, isSuperAdmin, loading, signUp, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
