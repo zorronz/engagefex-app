@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Copy, Check, Users, TrendingUp, Clock, Gift, Star, AlertCircle } from 'lucide-react';
+import { Copy, Check, Users, TrendingUp, Clock, Gift, Star } from 'lucide-react';
 
 type Referral = {
   referred_id: string;
@@ -135,12 +135,10 @@ export default function Referrals() {
             </div>
           </div>
 
-          <div className="mt-3 p-3 bg-surface-elevated rounded flex items-start gap-2">
-            <AlertCircle className="w-3.5 h-3.5 text-foreground-dim mt-0.5 shrink-0" />
+          <div className="mt-3 p-3 bg-surface-elevated rounded">
             <p className="text-xs text-foreground-muted">
-              Max <span className="text-foreground font-mono font-semibold">5</span> referral rewards per day.
-              You earn <span className="text-foreground font-mono font-semibold">+30 pts</span> when a friend signs up and an additional{' '}
-              <span className="text-foreground font-mono font-semibold">+20 pts</span> when they complete their first task.
+              Earn <span className="text-foreground font-mono font-semibold">+30 pts</span> when a friend signs up and an additional{' '}
+              <span className="text-foreground font-mono font-semibold">+20 pts</span> when they complete their first task. No daily limit — every valid referral earns rewards.
             </p>
           </div>
 
