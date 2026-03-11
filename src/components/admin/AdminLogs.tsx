@@ -16,13 +16,13 @@ export default function AdminLogs() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('admin_activity_logs')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from('admin_activity_logs') as any)
       .select('*')
       .order('created_at', { ascending: false })
       .limit(200)
-      .then(({ data }) => {
-        if (data) setLogs(data as LogRow[]);
+      .then(({ data }: { data: LogRow[] | null }) => {
+        if (data) setLogs(data);
         setLoading(false);
       });
   }, []);
