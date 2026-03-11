@@ -273,24 +273,33 @@ export type Database = {
       referrals: {
         Row: {
           created_at: string
+          first_task_completed: boolean
+          first_task_reward_paid: boolean
           id: string
           referred_id: string
           referrer_id: string
           signup_bonus_paid: boolean
+          signup_reward_paid: boolean
         }
         Insert: {
           created_at?: string
+          first_task_completed?: boolean
+          first_task_reward_paid?: boolean
           id?: string
           referred_id: string
           referrer_id: string
           signup_bonus_paid?: boolean
+          signup_reward_paid?: boolean
         }
         Update: {
           created_at?: string
+          first_task_completed?: boolean
+          first_task_reward_paid?: boolean
           id?: string
           referred_id?: string
           referrer_id?: string
           signup_bonus_paid?: boolean
+          signup_reward_paid?: boolean
         }
         Relationships: []
       }
