@@ -154,7 +154,7 @@ export default function ChoosePlan() {
                   ))}
                 </ul>
                 <button
-                  onClick={handleFree}
+                  onClick={() => navigate('/wallet')}
                   className={`w-full py-2.5 rounded text-sm font-semibold transition-opacity hover:opacity-90 ${plan.is_popular ? 'bg-primary text-primary-foreground' : 'bg-surface-elevated border border-border text-foreground hover:border-primary/50'}`}>
                   Subscribe — {price(plan.price_inr, plan.price_usd)}/mo
                 </button>

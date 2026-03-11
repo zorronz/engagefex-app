@@ -27,8 +27,8 @@ export default function AuthConfirmPage() {
           setMessage(error.message || 'Verification failed. The link may have expired.');
         } else {
           setStatus('success');
-          setMessage('Email verified successfully! Redirecting you to the dashboard…');
-          setTimeout(() => navigate('/dashboard'), 2500);
+          setMessage('Email verified! Setting up your account…');
+          setTimeout(() => navigate('/choose-plan'), 2000);
         }
       });
   }, []);
