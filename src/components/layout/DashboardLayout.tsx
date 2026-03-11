@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Menu,
   X,
-  Zap
+  Zap,
+  ArrowUpCircle
 } from 'lucide-react';
 
 const navItems = [
