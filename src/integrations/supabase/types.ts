@@ -44,6 +44,45 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_packs: {
+        Row: {
+          bonus_credits: number
+          created_at: string
+          credits: number
+          id: string
+          is_active: boolean
+          name: string
+          price_inr: number
+          price_usd: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          bonus_credits?: number
+          created_at?: string
+          credits: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price_inr: number
+          price_usd: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          bonus_credits?: number
+          created_at?: string
+          credits?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_inr?: number
+          price_usd?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -131,6 +170,27 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       point_economy: {
         Row: {
           cost_points: number
@@ -190,6 +250,7 @@ export type Database = {
           updated_at: string
           user_id: string
           wallet_balance: number
+          welcome_offer_shown: boolean
           withdrawable_balance: number
         }
         Insert: {
@@ -217,6 +278,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           wallet_balance?: number
+          welcome_offer_shown?: boolean
           withdrawable_balance?: number
         }
         Update: {
@@ -244,6 +306,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           wallet_balance?: number
+          welcome_offer_shown?: boolean
           withdrawable_balance?: number
         }
         Relationships: [
@@ -389,6 +452,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          features: Json
+          id: string
+          is_active: boolean
+          is_popular: boolean
+          monthly_credits: number
+          name: string
+          price_inr: number
+          price_usd: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          monthly_credits: number
+          name: string
+          price_inr: number
+          price_usd: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          monthly_credits?: number
+          name?: string
+          price_inr?: number
+          price_usd?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       task_completions: {
         Row: {
@@ -557,6 +662,36 @@ export type Database = {
         }
         Relationships: []
       }
+      welcome_offer_settings: {
+        Row: {
+          id: string
+          is_enabled: boolean
+          offer_credits: number
+          offer_price_inr: number
+          offer_price_usd: number
+          subscription_discount_pct: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          is_enabled?: boolean
+          offer_credits?: number
+          offer_price_inr?: number
+          offer_price_usd?: number
+          subscription_discount_pct?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          is_enabled?: boolean
+          offer_credits?: number
+          offer_price_inr?: number
+          offer_price_usd?: number
+          subscription_discount_pct?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -576,7 +711,7 @@ export type Database = {
       app_role: "admin" | "moderator" | "user" | "super_admin"
       completion_status: "pending" | "approved" | "rejected" | "disputed"
       payment_status: "pending" | "completed" | "failed" | "refunded"
-      platform_type: "instagram" | "facebook" | "youtube"
+      platform_type: "instagram" | "facebook" | "youtube" | "linkedin"
       task_status: "active" | "paused" | "completed" | "expired" | "deleted"
       task_type: "like" | "comment" | "subscribe"
       transaction_type:
@@ -716,7 +851,7 @@ export const Constants = {
       app_role: ["admin", "moderator", "user", "super_admin"],
       completion_status: ["pending", "approved", "rejected", "disputed"],
       payment_status: ["pending", "completed", "failed", "refunded"],
-      platform_type: ["instagram", "facebook", "youtube"],
+      platform_type: ["instagram", "facebook", "youtube", "linkedin"],
       task_status: ["active", "paused", "completed", "expired", "deleted"],
       task_type: ["like", "comment", "subscribe"],
       transaction_type: [
