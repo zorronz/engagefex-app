@@ -38,7 +38,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .single();
     if (data) {
       setProfile(data);
-      setMustChangePassword(!!(data as Profile & { must_change_password?: boolean }).must_change_password);
+      // must_change_password may not be in generated types yet — cast safely
+      setMustChangePassword(!!((data as Record<string, unknown>).must_change_password));
     }
 
     const { data: roleData } = await supabase
@@ -53,9 +54,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAdmin(hasAdmin);
     setIsSuperAdmin(hasSuperAdmin);
   };
-...
+
+  const refreshProfile = async () => {
+    if (user) await fetchProfile(user.id);
+  };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          setTimeout(() => fetchProfile(session.user.id), 0);
+        } else {
+          setProfile(null);
+          setIsAdmin(false);
+          setIsSuperAdmin(false);
+          setMustChangePassword(false);
+        }
+        setLoading(false);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signUp = async (email: string, password: string, name: string, referralCode?: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name, referral_code: referralCode },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    return { error };
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, isAdmin, isSuperAdmin, mustChangePassword, loading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{
+      user, session, profile,
+      isAdmin, isSuperAdmin, mustChangePassword,
+      loading,
+      signUp, signIn, signOut, refreshProfile,
+    }}>
       {children}
     </AuthContext.Provider>
   );
