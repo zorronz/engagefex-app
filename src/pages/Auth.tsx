@@ -41,7 +41,8 @@ export default function AuthPage() {
         if (error) {
           setError(error.message);
         } else {
-          setSuccess('Account created! Check your email to verify your account.');
+          // After email confirmation they'll land on dashboard; show message
+          setSuccess('Account created! Please check your email to verify your account, then sign in.');
         }
       }
     } finally {
