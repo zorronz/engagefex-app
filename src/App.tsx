@@ -13,6 +13,8 @@ import Campaigns from "./pages/Campaigns.tsx";
 import Wallet from "./pages/Wallet.tsx";
 import Referrals from "./pages/Referrals.tsx";
 import Admin from "./pages/Admin.tsx";
+import ForgotPassword from "./pages/ForgotPassword.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/ref/:code" element={<AuthPage />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
