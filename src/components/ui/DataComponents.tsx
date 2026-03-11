@@ -1,7 +1,7 @@
 import React from 'react';
-import { Instagram, Facebook, Youtube, ThumbsUp, MessageSquare, Bell } from 'lucide-react';
+import { Instagram, Facebook, Youtube, ThumbsUp, MessageSquare, Bell, Linkedin } from 'lucide-react';
 
-type Platform = 'instagram' | 'facebook' | 'youtube';
+type Platform = 'instagram' | 'facebook' | 'youtube' | 'linkedin';
 type TaskType = 'like' | 'comment' | 'subscribe';
 
 interface PlatformBadgeProps {
@@ -14,6 +14,7 @@ export function PlatformBadge({ platform, size = 'sm' }: PlatformBadgeProps) {
     instagram: { icon: Instagram, label: 'Instagram', className: 'bg-pink-500/10 text-pink-400 border border-pink-500/20' },
     facebook: { icon: Facebook, label: 'Facebook', className: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' },
     youtube: { icon: Youtube, label: 'YouTube', className: 'bg-red-500/10 text-red-400 border border-red-500/20' },
+    linkedin: { icon: Linkedin, label: 'LinkedIn', className: 'bg-sky-500/10 text-sky-400 border border-sky-500/20' },
   };
   const config = configs[platform] ?? { icon: Instagram, label: platform ?? 'Unknown', className: 'bg-muted text-muted-foreground border border-border' };
   const { icon: Icon, label, className } = config;
