@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TrendingUp, ArrowRight, Zap, Shield, Users } from 'lucide-react';
 
 const Index = () => {
@@ -13,6 +14,18 @@ const Index = () => {
           <span className="font-mono text-xs font-bold tracking-wider uppercase">EngageExchange</span>
         </div>
         <div className="flex items-center gap-3">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/15 text-primary border border-primary/25 cursor-default select-none">
+                  Beta
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs text-center">
+                This platform is currently in beta testing. Features may change and occasional bugs may occur.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <Link to="/auth" className="text-sm text-foreground-muted hover:text-foreground transition-colors">Sign In</Link>
           <Link to="/auth?mode=signup" className="px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity">Get Started</Link>
         </div>

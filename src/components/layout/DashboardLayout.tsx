@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -68,6 +69,18 @@ export default function DashboardLayout({ children, rightPanel, rightPanelTitle 
           <span className="font-mono text-xs font-bold tracking-wider uppercase text-foreground lg:hidden xl:block">
             EngageExch.
           </span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="ml-auto lg:hidden xl:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/15 text-primary border border-primary/25 cursor-default select-none leading-none">
+                  Beta
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                This platform is currently in beta testing. Features may change and occasional bugs may occur.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <button
             className="ml-auto text-foreground-dim hover:text-foreground lg:hidden"
             onClick={() => setMobileOpen(false)}
@@ -174,6 +187,9 @@ export default function DashboardLayout({ children, rightPanel, rightPanelTitle 
               <TrendingUp className="w-3 h-3 text-primary-foreground" />
             </div>
             <span className="font-mono text-xs font-bold tracking-wider uppercase">EngageExch.</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/15 text-primary border border-primary/25 select-none leading-none">
+              Beta
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="font-mono text-xs value-earn font-semibold">
