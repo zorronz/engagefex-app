@@ -95,6 +95,80 @@ const Index = () => {
         ))}
       </section>
 
+      {/* Pricing */}
+      <section className="px-6 py-16 max-w-4xl mx-auto">
+        <p className="label-caps text-center mb-2">PLANS & PRICING</p>
+        <h2 className="text-2xl font-bold text-foreground text-center mb-8">Flexible plans for every creator</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Free */}
+          <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Free</p>
+              <p className="font-mono text-2xl font-bold text-foreground mt-1">₹0 <span className="text-xs text-foreground-muted font-sans font-normal">/ mo</span></p>
+            </div>
+            <ul className="space-y-2 flex-1">
+              {['Earn credits by completing tasks', 'Basic marketplace access', 'Limited daily tasks', '50 welcome bonus credits'].map(f => (
+                <li key={f} className="flex items-start gap-2 text-xs text-foreground-muted">
+                  <Check className="w-3.5 h-3.5 text-earn mt-0.5 flex-shrink-0" />{f}
+                </li>
+              ))}
+            </ul>
+            <Link to="/auth?mode=signup" className="w-full text-center py-2.5 border border-border rounded text-sm font-medium text-foreground hover:border-primary/50 transition-colors">
+              Get Started Free
+            </Link>
+          </div>
+          {/* Pro */}
+          <div className="bg-surface border border-primary/40 rounded-xl p-5 flex flex-col gap-4 relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="flex items-center gap-1 px-2.5 py-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full">
+                <Star className="w-2.5 h-2.5 fill-current" /> MOST POPULAR
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Pro Plan</p>
+              <p className="font-mono text-2xl font-bold text-foreground mt-1">₹399 <span className="text-xs text-foreground-muted font-sans font-normal">/ mo</span></p>
+              <p className="text-xs text-earn font-mono">2,000 credits/month</p>
+            </div>
+            <ul className="space-y-2 flex-1">
+              {['2,000 credits/month', 'Priority task access', 'Up to 100 tasks/day', 'Faster approval', 'Priority support'].map(f => (
+                <li key={f} className="flex items-start gap-2 text-xs text-foreground-muted">
+                  <Check className="w-3.5 h-3.5 text-earn mt-0.5 flex-shrink-0" />{f}
+                </li>
+              ))}
+            </ul>
+            <Link to="/auth?mode=signup" className="w-full text-center py-2.5 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity">
+              Subscribe — ₹399/mo
+            </Link>
+          </div>
+          {/* Credit Packs */}
+          <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Package className="w-4 h-4 text-yellow-400" />
+              <p className="text-sm font-semibold text-foreground">Credit Packs</p>
+            </div>
+            <p className="text-xs text-foreground-muted -mt-2">Buy credits once, use anytime. No recurring charges.</p>
+            <ul className="space-y-2 flex-1">
+              {[
+                { name: 'Starter Pack', credits: '500 credits', price: '₹99' },
+                { name: 'Value Pack', credits: '1,650 credits', price: '₹249' },
+                { name: 'Pro Pack', credits: '5,750 credits', price: '₹699' },
+              ].map(p => (
+                <li key={p.name} className="flex items-center justify-between text-xs py-1.5 border-b border-border-subtle last:border-0">
+                  <span className="text-foreground-muted">{p.name}</span>
+                  <div className="text-right">
+                    <span className="font-mono text-earn">{p.credits}</span>
+                    <span className="text-foreground-dim ml-2 font-mono">{p.price}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Link to="/auth?mode=signup" className="w-full text-center py-2.5 border border-border rounded text-sm font-medium text-foreground hover:border-primary/50 transition-colors">
+              Buy Credits
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-border px-6 py-6 text-center">
         <p className="label-caps text-foreground-dim">ENGAGEEXCHANGE · HUMAN-POWERED ENGAGEMENT · 2026</p>
