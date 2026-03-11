@@ -17,6 +17,7 @@ import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import ChangePassword from "./pages/ChangePassword.tsx";
 import ChoosePlan from "./pages/ChoosePlan.tsx";
+import AuthConfirm from "./pages/AuthConfirm.tsx";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/confirm" element={<AuthConfirm />} />
             <Route path="/ref/:code" element={<AuthPage />} />
             {/* Force password change — accessible when logged in */}
             <Route path="/change-password" element={<ChangePassword />} />
