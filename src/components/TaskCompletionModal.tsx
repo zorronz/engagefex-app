@@ -155,14 +155,17 @@ export default function TaskCompletionModal({ task, onComplete, onClose }: TaskC
               ))}
             </div>
 
-            {/* Open Post button */}
-            <button
-              onClick={handleOpenPost}
+            {/* Open Post button — pure anchor, no JS redirect */}
+            <a
+              href={task.post_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={startTimer}
               className="w-full py-3 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-cta"
             >
               <ExternalLink className="w-4 h-4" />
               Open Post
-            </button>
+            </a>
 
             {/* Mobile notice */}
             <div className="mt-3 flex items-start gap-2 px-3 py-2.5 rounded bg-surface-elevated border border-border-subtle">
