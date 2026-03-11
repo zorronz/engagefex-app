@@ -10,12 +10,13 @@ interface PlatformBadgeProps {
 }
 
 export function PlatformBadge({ platform, size = 'sm' }: PlatformBadgeProps) {
-  const configs = {
+  const configs: Record<string, { icon: React.ElementType; label: string; className: string }> = {
     instagram: { icon: Instagram, label: 'Instagram', className: 'bg-pink-500/10 text-pink-400 border border-pink-500/20' },
     facebook: { icon: Facebook, label: 'Facebook', className: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' },
     youtube: { icon: Youtube, label: 'YouTube', className: 'bg-red-500/10 text-red-400 border border-red-500/20' },
   };
-  const { icon: Icon, label, className } = configs[platform];
+  const config = configs[platform] ?? { icon: Instagram, label: platform ?? 'Unknown', className: 'bg-muted text-muted-foreground border border-border' };
+  const { icon: Icon, label, className } = config;
   const iconSize = size === 'sm' ? 'w-3 h-3' : 'w-3.5 h-3.5';
   const textSize = size === 'sm' ? 'text-xs' : 'text-xs';
 
@@ -32,12 +33,13 @@ interface TaskTypeBadgeProps {
 }
 
 export function TaskTypeBadge({ taskType }: TaskTypeBadgeProps) {
-  const configs = {
+  const configs: Record<string, { icon: React.ElementType; label: string; className: string }> = {
     like: { icon: ThumbsUp, label: 'Like', className: 'bg-accent text-foreground-muted border border-border' },
     comment: { icon: MessageSquare, label: 'Comment', className: 'bg-accent text-foreground-muted border border-border' },
     subscribe: { icon: Bell, label: 'Subscribe', className: 'bg-accent text-foreground-muted border border-border' },
   };
-  const { icon: Icon, label, className } = configs[taskType];
+  const config = configs[taskType] ?? { icon: ThumbsUp, label: taskType ?? 'Unknown', className: 'bg-accent text-muted-foreground border border-border' };
+  const { icon: Icon, label, className } = config;
 
   return (
     <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono ${className}`}>
