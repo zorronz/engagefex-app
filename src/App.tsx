@@ -17,6 +17,7 @@ import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import ChangePassword from "./pages/ChangePassword.tsx";
 import ChoosePlan from "./pages/ChoosePlan.tsx";
+import AuthConfirm from "./pages/AuthConfirm.tsx";
 
 const queryClient = new QueryClient();
 
