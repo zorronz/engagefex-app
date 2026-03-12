@@ -239,6 +239,15 @@ export default function ChoosePlan() {
                       <span className="font-mono text-2xl font-bold text-foreground">${price}</span>
                       <span className="text-xs text-foreground-muted">/{billing === 'yearly' ? 'year' : 'month'}</span>
                     </div>
+                    {billing === 'monthly' && (key === 'pro' || key === 'agency') && (
+                      <p className="text-xs mt-1">
+                        <span className="line-through text-foreground-dim font-mono">${display.monthlyPrice}</span>
+                        {' '}
+                        <span className="text-yellow-400 font-mono font-semibold">${key === 'pro' ? '3.50' : '10.50'}</span>
+                        {' '}
+                        <span className="text-[11px] text-foreground-muted">first month with code LAUNCH30</span>
+                      </p>
+                    )}
                     {billing === 'yearly' && perMonth && (
                       <p className="text-[10px] text-earn font-mono mt-0.5">${perMonth}/mo — Save 17%</p>
                     )}
