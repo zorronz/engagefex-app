@@ -1,27 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle, AlertCircle, Loader2, TrendingUp } from 'lucide-react';
 
 export default function AuthConfirmPage() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const tokenHash = searchParams.get('token_hash');
-    const type = searchParams.get('type') as 'email' | 'recovery' | 'invite' | 'email_change' | null;
-    const code = searchParams.get('code');
+    const hash = window.location.hash.substring(1); // strip leading #
+    const params = new URLSearchParams(hash);
 
-    // PKCE flow: link contains ?code=
-    if (code) {
+    const errorCode = params.get('error_code');
+    const errorDescription = params.get('error_description');
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+
+    // Hash contains an error from Supabase's /verify redirect
+    if (errorCode || errorDescription) {
+      setStatus('error');
+      setMessage(
+        errorDescription
+          ? decodeURIComponent(errorDescription.replace(/\+/g, ' '))
+          : 'Verification failed. The link may have expired.'
+      );
+      return;
+    }
+
+    // Hash contains a session — implicit flow success
+    if (accessToken && refreshToken) {
       supabase.auth
-        .exchangeCodeForSession(code)
+        .setSession({ access_token: accessToken, refresh_token: refreshToken })
         .then(({ error }) => {
           if (error) {
             setStatus('error');
-            setMessage(error.message || 'Verification failed. The link may have expired.');
+            setMessage(error.message || 'Could not establish session. Please try signing in.');
           } else {
             setStatus('success');
             setMessage('Email verified! Setting up your account…');
@@ -31,23 +45,7 @@ export default function AuthConfirmPage() {
       return;
     }
 
-    // Implicit flow: link contains ?token_hash= & ?type=
-    if (tokenHash && type) {
-      supabase.auth
-        .verifyOtp({ token_hash: tokenHash, type })
-        .then(({ error }) => {
-          if (error) {
-            setStatus('error');
-            setMessage(error.message || 'Verification failed. The link may have expired.');
-          } else {
-            setStatus('success');
-            setMessage('Email verified! Setting up your account…');
-            setTimeout(() => navigate('/choose-plan'), 2000);
-          }
-        });
-      return;
-    }
-
+    // No recognised params at all
     setStatus('error');
     setMessage('Invalid verification link. Please request a new verification email.');
   }, []);
