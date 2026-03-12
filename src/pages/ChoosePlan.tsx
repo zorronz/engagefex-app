@@ -2,12 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Check, Zap, Star, Gift, ArrowRight, X, MessageCircle, Heart, Layers, Users } from 'lucide-react';
+import { Check, Zap, Star, Gift, ArrowRight, X, Heart, Layers, Users } from 'lucide-react';
 
-interface CreditPack {
-  id: string; name: string; credits: number; bonus_credits: number;
-  price_inr: number; price_usd: number;
-}
 interface SubPlan {
   id: string; name: string; monthly_credits: number;
   price_inr: number; price_usd: number; features: string[]; is_popular: boolean;
@@ -16,12 +12,6 @@ interface WelcomeOffer {
   is_enabled: boolean; offer_credits: number;
   offer_price_inr: number; offer_price_usd: number; subscription_discount_pct: number;
 }
-
-// Simple currency detector: if timezone offset is UTC+5:30 → INR, else USD
-const useINR = () => {
-  const off = new Date().getTimezoneOffset();
-  return off === -330;
-};
 
 // Static engagement-focused plan display data keyed by lowercase plan name
 const PLAN_DISPLAY: Record<string, {
@@ -61,8 +51,6 @@ const getDisplayKey = (name: string) => name.toLowerCase().replace(/\s+/g, '');
 export default function ChoosePlan() {
   const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const isINR = useINR();
-  const [packs, setPacks] = useState<CreditPack[]>([]);
   const [plans, setPlans] = useState<SubPlan[]>([]);
   const [offer, setOffer] = useState<WelcomeOffer | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,12 +58,10 @@ export default function ChoosePlan() {
 
   useEffect(() => {
     (async () => {
-      const [p, s, o] = await Promise.all([
-        supabase.from('credit_packs').select('*').eq('is_active', true).order('sort_order'),
+      const [s, o] = await Promise.all([
         supabase.from('subscription_plans').select('*').eq('is_active', true).order('sort_order'),
         supabase.from('welcome_offer_settings').select('*').limit(1).single(),
       ]);
-      if (p.data) setPacks(p.data.map(x => ({ ...x, price_inr: Number(x.price_inr), price_usd: Number(x.price_usd) })));
       if (s.data) setPlans(s.data.map(x => ({
         ...x, price_inr: Number(x.price_inr), price_usd: Number(x.price_usd),
         features: Array.isArray(x.features) ? x.features as string[] : [],
@@ -84,8 +70,6 @@ export default function ChoosePlan() {
       setLoading(false);
     })();
   }, []);
-
-  const price = (inr: number, usd: number) => isINR ? `₹${inr}` : `$${usd}`;
 
   const handleFree = async () => {
     if (user) {
@@ -138,20 +122,24 @@ export default function ChoosePlan() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  Welcome Offer — Available Only Right Now
-                  <span className="label-caps px-1.5 py-0.5 bg-yellow-400/20 text-yellow-400 rounded">ONE TIME</span>
+                  Launch Offer — Limited Time
+                  <span className="label-caps px-1.5 py-0.5 bg-yellow-400/20 text-yellow-400 rounded">LIMITED</span>
                 </p>
                 <p className="text-xs text-foreground-muted mt-1">
-                  Get <span className="text-earn font-mono font-semibold">{offer.offer_credits} credits</span> for just{' '}
-                  <span className="text-primary font-mono font-semibold">{price(offer.offer_price_inr, offer.offer_price_usd)}</span>
-                  {' '}— or save <span className="text-yellow-400 font-semibold">{offer.subscription_discount_pct}%</span> on your first subscription month.
+                  Upgrade to Pro and save{' '}
+                  <span className="text-yellow-400 font-semibold">{offer.subscription_discount_pct}%</span>{' '}
+                  on your first month. Get instant engagement without completing tasks.
                 </p>
                 <div className="flex gap-2 mt-3 flex-wrap">
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400/20 border border-yellow-400/30 text-yellow-400 rounded text-xs font-semibold hover:bg-yellow-400/30 transition-colors">
-                    Get {offer.offer_credits} credits — {price(offer.offer_price_inr, offer.offer_price_usd)}
+                  <button
+                    onClick={() => navigate('/wallet')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 border border-primary/30 text-primary rounded text-xs font-semibold hover:bg-primary/30 transition-colors">
+                    <Zap className="w-3 h-3" /> Upgrade to Pro
                   </button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary rounded text-xs font-semibold hover:bg-primary/20 transition-colors">
-                    {offer.subscription_discount_pct}% off first month
+                  <button
+                    onClick={() => navigate('/wallet')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400/20 border border-yellow-400/30 text-yellow-400 rounded text-xs font-semibold hover:bg-yellow-400/30 transition-colors">
+                    Claim {offer.subscription_discount_pct}% Launch Discount
                   </button>
                 </div>
               </div>
@@ -210,8 +198,11 @@ export default function ChoosePlan() {
                   )}
                   <div>
                     <p className="font-bold text-foreground text-lg">{display.title}</p>
+                    {plan.is_popular && (
+                      <p className="text-[10px] text-primary font-semibold mt-0.5">Best value for creators</p>
+                    )}
                     <div className="flex items-baseline gap-1 mt-1">
-                      <span className="font-mono text-2xl font-bold text-foreground">{price(plan.price_inr, plan.price_usd)}</span>
+                      <span className="font-mono text-2xl font-bold text-foreground">${plan.price_usd}</span>
                       <span className="text-xs text-foreground-muted">/month</span>
                     </div>
                     <p className="text-xs text-foreground-muted mt-2">{display.description}</p>
@@ -255,36 +246,6 @@ export default function ChoosePlan() {
             ))}
           </div>
         </div>
-
-        {/* ─── Credit Packs ─── */}
-        {packs.length > 0 && (
-          <div>
-            <p className="label-caps text-center mb-5">ONE-TIME CREDIT PACKS</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {packs.map(pack => (
-                <div key={pack.id} className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-3">
-                  <div>
-                    <p className="font-semibold text-foreground">{pack.name}</p>
-                    <div className="flex items-baseline gap-1 mt-1">
-                      <span className="font-mono text-xl font-bold text-foreground">{price(pack.price_inr, pack.price_usd)}</span>
-                      <span className="text-xs text-foreground-muted">one-time</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="font-mono text-sm text-earn font-semibold">{pack.credits.toLocaleString()} credits</p>
-                    {pack.bonus_credits > 0 && (
-                      <p className="text-xs text-yellow-400 font-mono">+{pack.bonus_credits} bonus credits</p>
-                    )}
-                  </div>
-                  <button onClick={() => navigate('/wallet')}
-                    className="w-full py-2 bg-surface-elevated border border-border rounded text-xs font-semibold text-foreground hover:border-primary/50 transition-colors">
-                    Buy Pack
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
