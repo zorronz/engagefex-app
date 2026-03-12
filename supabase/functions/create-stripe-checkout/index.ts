@@ -7,16 +7,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Stripe price IDs — map plan keys to price IDs
+// Stripe price IDs — map plan keys to real Stripe price IDs
 const STRIPE_PRICES: Record<string, string> = {
-  pro_monthly:     "price_pro_monthly_5",
-  pro_yearly:      "price_pro_yearly_50",
-  agency_monthly:  "price_agency_monthly_15",
-  agency_yearly:   "price_agency_yearly_150",
-  // Credit packs (one-time)
-  starter_pack:    "price_starter_pack",
-  growth_pack:     "price_growth_pack",
-  pro_pack:        "price_pro_pack",
+  pro_monthly:     "price_1TAFLjPPIQmBAiD8ZuNgFYN5",
+  pro_yearly:      "price_1TAFM3PPIQmBAiD81sAvMMJx",
+  agency_monthly:  "price_1TAFMTPPIQmBAiD8b87sgxjH",
+  agency_yearly:   "price_1TAFMlPPIQmBAiD8KI2VPyoE",
 };
 
 const logStep = (step: string, details?: unknown) => {
