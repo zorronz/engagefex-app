@@ -140,9 +140,7 @@ export default function ChoosePlan() {
                   <span className="label-caps px-1.5 py-0.5 bg-yellow-400/20 text-yellow-400 rounded">LIMITED</span>
                 </p>
                 <p className="text-xs text-foreground-muted mt-1">
-                  Upgrade to Pro and save{' '}
-                  <span className="text-yellow-400 font-semibold">{offer.subscription_discount_pct}%</span>{' '}
-                  on your first month. Get instant engagement without completing tasks.
+                  <b className="text-yellow-400">LAUNCH30</b>
                 </p>
                 <div className="flex gap-2 mt-3 flex-wrap">
                   <button
