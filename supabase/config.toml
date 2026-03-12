@@ -1,5 +1,14 @@
 project_id = "ycnupnhjfcespvqjanaa"
 
+[auth]
+site_url = "https://xengage.lovable.app"
+additional_redirect_urls = [
+  "https://xengage.lovable.app/auth/confirm",
+  "https://xengage.lovable.app/reset-password",
+  "https://id-preview--02fd2ecf-ca5c-4764-8422-ef629cfbc814.lovable.app/auth/confirm",
+  "https://id-preview--02fd2ecf-ca5c-4764-8422-ef629cfbc814.lovable.app/reset-password"
+]
+
 [auth.hook.send_email]
 enabled = true
 uri = "https://ycnupnhjfcespvqjanaa.supabase.co/functions/v1/auth-email-hook"
