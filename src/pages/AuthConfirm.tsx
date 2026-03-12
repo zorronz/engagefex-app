@@ -10,26 +10,46 @@ export default function AuthConfirmPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
+    const tokenHash = searchParams.get('token_hash');
+    const type = searchParams.get('type') as 'email' | 'recovery' | 'invite' | 'email_change' | null;
     const code = searchParams.get('code');
 
-    if (!code) {
-      setStatus('error');
-      setMessage('Invalid verification link. The code is missing or the link has expired.');
+    // PKCE flow: link contains ?code=
+    if (code) {
+      supabase.auth
+        .exchangeCodeForSession(code)
+        .then(({ error }) => {
+          if (error) {
+            setStatus('error');
+            setMessage(error.message || 'Verification failed. The link may have expired.');
+          } else {
+            setStatus('success');
+            setMessage('Email verified! Setting up your account…');
+            setTimeout(() => navigate('/choose-plan'), 2000);
+          }
+        });
       return;
     }
 
-    supabase.auth
-      .exchangeCodeForSession(code)
-      .then(({ error }) => {
-        if (error) {
-          setStatus('error');
-          setMessage(error.message || 'Verification failed. The link may have expired.');
-        } else {
-          setStatus('success');
-          setMessage('Email verified! Setting up your account…');
-          setTimeout(() => navigate('/choose-plan'), 2000);
-        }
-      });
+    // Implicit flow: link contains ?token_hash= & ?type=
+    if (tokenHash && type) {
+      supabase.auth
+        .verifyOtp({ token_hash: tokenHash, type })
+        .then(({ error }) => {
+          if (error) {
+            setStatus('error');
+            setMessage(error.message || 'Verification failed. The link may have expired.');
+          } else {
+            setStatus('success');
+            setMessage('Email verified! Setting up your account…');
+            setTimeout(() => navigate('/choose-plan'), 2000);
+          }
+        });
+      return;
+    }
+
+    setStatus('error');
+    setMessage('Invalid verification link. Please request a new verification email.');
   }, []);
 
   return (
