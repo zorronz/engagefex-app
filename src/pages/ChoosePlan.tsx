@@ -85,7 +85,7 @@ export default function ChoosePlan() {
     })();
   }, []);
 
-  const price = (inr: number, usd: number) => isINR ? `₹${inr}` : `$${usd}`;
+  const price = (_inr: number, usd: number) => `$${usd}`;
 
   const handleFree = async () => {
     if (user) {
