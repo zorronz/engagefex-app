@@ -3,171 +3,177 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-import { ArrowUpRight, ArrowDownRight, ShoppingCart, ExternalLink, Crown, ArrowRight, Check, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import {
+  ArrowUpRight, ArrowDownRight, ShoppingCart, ExternalLink,
+  Crown, ArrowRight, Check, Star, Gift, Zap, RefreshCw,
+} from 'lucide-react';
 
 type Transaction = Tables<'wallet_transactions'>;
 type CreditPack = Tables<'credit_packs'>;
+type BillingCycle = 'monthly' | 'yearly';
 
-/** Engagement approximations per credit:
- * ~1 comment per 12 credits (comment task costs 12 pts)
- * ~1 like per 4 credits (like task costs 4 pts)
- */
 function engagementEstimate(credits: number) {
-  const comments = Math.round(credits / 12);
-  const likes = Math.round(credits / 4);
-  return { comments, likes };
+  return { comments: Math.round(credits / 12), likes: Math.round(credits / 4) };
 }
 
-// Static engagement display data for subscription plans (keyed by lowercase name)
 const PLAN_DISPLAY: Record<string, {
-  description: string;
-  benefits: string[];
-  buttonText: string;
+  description: string; benefits: string[]; buttonText: string;
+  planKey: { monthly: string; yearly: string };
+  monthlyPrice: number; yearlyPrice: number;
 }> = {
   free: {
     description: 'Earn engagement by completing tasks.',
-    benefits: [
-      'Earn up to ~20 comments per day',
-      '~600 comments per month with consistent activity',
-      '2 campaigns per day',
-      'Daily login rewards',
-    ],
+    benefits: ['Earn up to ~20 comments per day', '~600 comments/month with activity', '2 campaigns per day', 'Daily login rewards (+5 credits/day)'],
     buttonText: 'Current Plan',
+    planKey: { monthly: '', yearly: '' },
+    monthlyPrice: 0, yearlyPrice: 0,
   },
   pro: {
     description: 'Get instant engagement without completing tasks.',
-    benefits: [
-      'Up to ~160 comments per month',
-      'Up to ~500 likes per month',
-      '2,000 credits automatically added monthly',
-      'Create up to 10 campaigns per day',
-      'Faster campaign completion',
-    ],
+    benefits: ['Up to ~160 comments per month', 'Up to ~500 likes per month', '2,000 credits/month included', 'Create up to 10 campaigns/day', 'Faster campaign completion'],
     buttonText: 'Upgrade to Pro',
+    planKey: { monthly: 'pro_monthly', yearly: 'pro_yearly' },
+    monthlyPrice: 5, yearlyPrice: 50,
   },
   agency: {
     description: 'For creators, marketers, and power users.',
-    benefits: [
-      'Up to ~660 comments per month',
-      'Up to ~2,000 likes per month',
-      '8,000 credits automatically added monthly',
-      'Create up to 50 campaigns per day',
-      'Priority campaign processing',
-    ],
+    benefits: ['Up to ~660 comments per month', 'Up to ~2,000 likes per month', '8,000 credits/month included', 'Create up to 50 campaigns/day', 'Priority campaign processing'],
     buttonText: 'Upgrade to Agency',
+    planKey: { monthly: 'agency_monthly', yearly: 'agency_yearly' },
+    monthlyPrice: 15, yearlyPrice: 150,
   },
 };
 
 const getDisplayKey = (name: string) => name.toLowerCase().replace(/\s+/g, '');
 
 export default function Wallet() {
-  const { profile, user, refreshProfile } = useAuth();
+  const { profile, user, refreshProfile, stripeSubscription, checkStripeSubscription } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [paymentNote, setPaymentNote] = useState('');
   const [subPlans, setSubPlans] = useState<{ id: string; name: string; monthly_credits: number; price_usd: number; is_popular: boolean }[]>([]);
   const [creditPacks, setCreditPacks] = useState<CreditPack[]>([]);
+  const [billing, setBilling] = useState<BillingCycle>('monthly');
+  const [checkingStripe, setCheckingStripe] = useState(false);
+
+  // Check for Stripe success/cancel in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('stripe_success')) {
+      setPaymentNote('✓ Subscription activated! Your plan has been upgraded.');
+      checkStripeSubscription().then(() => refreshProfile());
+      window.history.replaceState({}, '', '/wallet');
+    } else if (params.get('stripe_pack_success')) {
+      const pack = params.get('pack') ?? 'credit pack';
+      setPaymentNote(`✓ ${decodeURIComponent(pack)} purchased! Credits will appear shortly.`);
+      window.history.replaceState({}, '', '/wallet');
+    } else if (params.get('stripe_cancel')) {
+      setPaymentNote('Payment cancelled. You can try again anytime.');
+      window.history.replaceState({}, '', '/wallet');
+    }
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
     Promise.all([
-      supabase.from('wallet_transactions').select('*').eq('user_id', user.id)
-        .order('created_at', { ascending: false }).limit(50),
+      supabase.from('wallet_transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100),
       supabase.from('subscription_plans').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('credit_packs').select('*').eq('is_active', true).order('sort_order'),
     ]).then(([txRes, plansRes, packsRes]) => {
       if (txRes.data) setTransactions(txRes.data);
       if (plansRes.data) setSubPlans(plansRes.data.map(p => ({
-        id: p.id,
-        name: p.name,
-        monthly_credits: p.monthly_credits,
-        price_usd: Number(p.price_usd),
-        is_popular: p.is_popular,
+        id: p.id, name: p.name, monthly_credits: p.monthly_credits,
+        price_usd: Number(p.price_usd), is_popular: p.is_popular,
       })));
       if (packsRes.data) setCreditPacks(packsRes.data);
       setLoading(false);
     });
   }, [user?.id]);
 
-  const handlePurchasePack = async (pack: CreditPack) => {
+  const handleStripeSubscription = async (planKey: string) => {
+    setPurchasing(planKey);
+    setPaymentNote('');
+    try {
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+        body: { plan: planKey },
+      });
+      if (error || !data?.url) throw new Error(error?.message ?? 'Failed to create checkout session');
+      window.location.href = data.url;
+    } catch (e) {
+      setPaymentNote(`Error: ${e instanceof Error ? e.message : e}`);
+      setPurchasing(null);
+    }
+  };
+
+  const handleStripePackPurchase = async (pack: CreditPack) => {
+    setPurchasing(pack.id);
+    setPaymentNote('');
+    try {
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+        body: { pack_name: pack.name, price_usd: Number(pack.price_usd) },
+      });
+      if (error || !data?.url) throw new Error(error?.message ?? 'Failed to create checkout session');
+      window.location.href = data.url;
+    } catch (e) {
+      setPaymentNote(`Error: ${e instanceof Error ? e.message : e}`);
+      setPurchasing(null);
+    }
+  };
+
+  // Legacy Razorpay for INR users (kept intact)
+  const handleRazorpayPack = async (pack: CreditPack) => {
     if (!user?.id || !profile) return;
     setPurchasing(pack.id);
     setPaymentNote('');
-
     const totalCredits = pack.credits + pack.bonus_credits;
     const priceInr = Number(pack.price_inr);
 
     const { data: payment, error } = await supabase.from('payments').insert({
-      user_id: user.id,
-      amount: priceInr,
-      currency: 'INR',
-      points: totalCredits,
-      status: 'pending',
-      gateway: 'razorpay',
-      package_name: pack.name,
+      user_id: user.id, amount: priceInr, currency: 'INR',
+      points: totalCredits, status: 'pending', gateway: 'razorpay', package_name: pack.name,
     }).select().single();
 
-    if (error || !payment) {
-      setPaymentNote('Failed to initiate payment. Please try again.');
-      setPurchasing(null);
-      return;
-    }
+    if (error || !payment) { setPaymentNote('Failed to initiate payment.'); setPurchasing(null); return; }
 
     const scriptLoaded = await new Promise<boolean>(resolve => {
       if ((window as unknown as Record<string, unknown>).Razorpay) { resolve(true); return; }
       const s = document.createElement('script');
       s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      s.onload = () => resolve(true);
-      s.onerror = () => resolve(false);
+      s.onload = () => resolve(true); s.onerror = () => resolve(false);
       document.body.appendChild(s);
     });
 
-    if (!scriptLoaded) {
-      setPaymentNote('Razorpay is not available. Please connect your Razorpay account in settings.');
-      setPurchasing(null);
-      return;
-    }
+    if (!scriptLoaded) { setPaymentNote('Razorpay unavailable.'); setPurchasing(null); return; }
 
     const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
       body: { payment_id: payment.id, amount: priceInr, currency: 'INR' },
     });
 
     if (orderError || !orderData?.order_id) {
-      setPaymentNote('Could not create payment order. Please ensure Razorpay is configured.');
+      setPaymentNote('Could not create Razorpay order.'); 
       await supabase.from('payments').update({ status: 'failed' }).eq('id', payment.id);
-      setPurchasing(null);
-      return;
+      setPurchasing(null); return;
     }
 
     const RazorpayClass = (window as unknown as { Razorpay: new (opts: unknown) => { open: () => void } }).Razorpay;
     const rzp = new RazorpayClass({
-      key: orderData.key_id,
-      amount: priceInr * 100,
-      currency: 'INR',
-      name: 'EngageExchange',
-      description: `${totalCredits} Credits — ${pack.name}`,
+      key: orderData.key_id, amount: priceInr * 100, currency: 'INR',
+      name: 'EngageExchange', description: `${totalCredits} Credits — ${pack.name}`,
       order_id: orderData.order_id,
       prefill: { email: profile.email, name: profile.name },
       theme: { color: '#3b82f6' },
       handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
         const { data: verifyData } = await supabase.functions.invoke('verify-razorpay-payment', {
-          body: {
-            payment_id: payment.id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_signature: response.razorpay_signature,
-            points: totalCredits,
-          },
+          body: { payment_id: payment.id, razorpay_payment_id: response.razorpay_payment_id, razorpay_order_id: response.razorpay_order_id, razorpay_signature: response.razorpay_signature, points: totalCredits },
         });
         if (verifyData?.success) {
           await refreshProfile();
-          const { data } = await supabase.from('wallet_transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50);
+          const { data } = await supabase.from('wallet_transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100);
           if (data) setTransactions(data);
-          setPaymentNote(`✓ ${totalCredits} credits added to your balance!`);
+          setPaymentNote(`✓ ${totalCredits} credits added!`);
         } else {
-          setPaymentNote('Payment verification failed. Contact support if credits were deducted.');
+          setPaymentNote('Payment verification failed. Contact support.');
         }
         setPurchasing(null);
       },
@@ -176,8 +182,21 @@ export default function Wallet() {
     rzp.open();
   };
 
+  const handleRefreshSubscription = async () => {
+    setCheckingStripe(true);
+    await checkStripeSubscription();
+    await refreshProfile();
+    setCheckingStripe(false);
+    setPaymentNote('✓ Subscription status refreshed.');
+    setTimeout(() => setPaymentNote(''), 3000);
+  };
+
   const txTypeColor = (t: string) => ['earned', 'bonus', 'referral', 'refunded'].includes(t) ? 'value-earn' : 'value-spend';
   const txTypeSign = (tx: Transaction) => ['earned', 'bonus', 'referral', 'refunded'].includes(tx.transaction_type) ? '+' : '';
+
+  const currentPlanName = stripeSubscription.subscribed
+    ? (stripeSubscription.plan?.includes('agency') ? 'Agency' : 'Pro')
+    : (profile?.is_premium ? 'Premium' : 'Free');
 
   return (
     <DashboardLayout>
@@ -199,49 +218,72 @@ export default function Wallet() {
           ))}
         </div>
 
-        {/* ── Subscription Plans ── */}
+        {/* Subscription Plans */}
         <div>
           <p className="label-caps mb-3">SUBSCRIPTION PLAN</p>
           <div className="bg-surface border border-border rounded p-5">
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Crown className="w-4 h-4 text-foreground-muted" />
                 <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    Current Plan: {profile?.is_premium ? 'Premium' : 'Free'}
-                  </p>
+                  <p className="text-sm font-semibold text-foreground">Current Plan: {currentPlanName}</p>
                   <p className="text-xs text-foreground-muted mt-0.5">
-                    {profile?.is_premium
-                      ? 'You have access to premium features and priority support.'
-                      : 'Upgrade to get monthly credits, higher limits, and priority access.'}
+                    {stripeSubscription.subscribed
+                      ? `Active until ${stripeSubscription.subscription_end ? new Date(stripeSubscription.subscription_end).toLocaleDateString() : '—'}`
+                      : profile?.is_premium
+                        ? 'You have access to premium features.'
+                        : 'Upgrade to get monthly credits, higher limits, and priority access.'}
                   </p>
                 </div>
               </div>
-              {profile?.is_premium && (
-                <span className="flex items-center gap-1 px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded text-xs text-yellow-400 font-semibold">
-                  Active
+              <div className="flex items-center gap-2">
+                {(stripeSubscription.subscribed || profile?.is_premium) && (
+                  <span className="flex items-center gap-1 px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded text-xs text-yellow-400 font-semibold">
+                    Active
+                  </span>
+                )}
+                <button
+                  onClick={handleRefreshSubscription}
+                  disabled={checkingStripe}
+                  title="Refresh subscription status"
+                  className="p-1.5 rounded border border-border text-foreground-muted hover:text-foreground hover:border-primary/40 transition-colors disabled:opacity-50">
+                  <RefreshCw className={`w-3.5 h-3.5 ${checkingStripe ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Billing toggle */}
+            <div className="flex items-center gap-1 bg-background border border-border rounded-full p-1 w-fit mb-4">
+              <button
+                onClick={() => setBilling('monthly')}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${billing === 'monthly' ? 'bg-primary text-primary-foreground' : 'text-foreground-muted hover:text-foreground'}`}>
+                Monthly
+              </button>
+              <button
+                onClick={() => setBilling('yearly')}
+                className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${billing === 'yearly' ? 'bg-primary text-primary-foreground' : 'text-foreground-muted hover:text-foreground'}`}>
+                Yearly
+                <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${billing === 'yearly' ? 'bg-white/20' : 'text-earn'}`}>
+                  -17%
                 </span>
-              )}
+              </button>
             </div>
 
             {/* Plan cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Free plan card */}
-              <div className={`relative border rounded-lg p-4 flex flex-col gap-3 ${!profile?.is_premium ? 'border-primary/40 bg-primary/5' : 'border-border bg-background'}`}>
-                {!profile?.is_premium && (
+              {/* Free */}
+              <div className={`relative border rounded-lg p-4 flex flex-col gap-3 ${!profile?.is_premium && !stripeSubscription.subscribed ? 'border-primary/40 bg-primary/5' : 'border-border bg-background'}`}>
+                {!profile?.is_premium && !stripeSubscription.subscribed && (
                   <span className="absolute -top-2.5 left-3 px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full">CURRENT</span>
                 )}
                 <div>
                   <p className="text-sm font-semibold text-foreground">Free</p>
-                  <p className="font-mono text-xl font-bold text-foreground mt-0.5">
-                    $0<span className="text-xs text-foreground-muted font-sans font-normal">/mo</span>
-                  </p>
+                  <p className="font-mono text-xl font-bold text-foreground mt-0.5">$0<span className="text-xs text-foreground-muted font-sans font-normal">/mo</span></p>
                 </div>
                 <ul className="space-y-1.5 flex-1">
                   {PLAN_DISPLAY.free.benefits.map((b, i) => (
                     <li key={i} className="flex items-start gap-1.5 text-xs text-foreground-muted">
-                      <Check className="w-3 h-3 text-earn mt-0.5 flex-shrink-0" />
-                      {b}
+                      <Check className="w-3 h-3 text-earn mt-0.5 flex-shrink-0" />{b}
                     </li>
                   ))}
                 </ul>
@@ -250,46 +292,63 @@ export default function Wallet() {
                 </button>
               </div>
 
-              {/* DB subscription plans */}
+              {/* DB plans */}
               {subPlans.map(plan => {
                 const key = getDisplayKey(plan.name);
                 const display = PLAN_DISPLAY[key];
                 if (!display) return null;
+                const planKey = display.planKey[billing];
+                const price = billing === 'yearly' ? display.yearlyPrice : display.monthlyPrice;
+                const perMonth = billing === 'yearly' ? (display.yearlyPrice / 12).toFixed(2) : null;
+                const isActive = stripeSubscription.subscribed && stripeSubscription.plan?.startsWith(key);
+                const isCheckingOut = purchasing === planKey;
+
                 return (
-                  <div key={plan.id} className={`relative border rounded-lg p-4 flex flex-col gap-3 ${plan.is_popular ? 'border-primary/50 bg-primary/5' : 'border-border bg-background'}`}>
-                    {plan.is_popular && (
+                  <div key={plan.id} className={`relative border rounded-lg p-4 flex flex-col gap-3 ${plan.is_popular ? 'border-primary/50 bg-primary/5' : 'border-border bg-background'} ${isActive ? 'ring-1 ring-earn/40' : ''}`}>
+                    {plan.is_popular && !isActive && (
                       <span className="absolute -top-2.5 left-3 flex items-center gap-1 px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full">
                         <Star className="w-2.5 h-2.5 fill-current" /> POPULAR
                       </span>
                     )}
+                    {isActive && (
+                      <span className="absolute -top-2.5 left-3 px-2 py-0.5 bg-earn text-background text-[10px] font-bold rounded-full">ACTIVE</span>
+                    )}
                     <div>
                       <p className="text-sm font-semibold text-foreground">{plan.name}</p>
-                      {plan.is_popular && (
-                        <p className="text-[10px] text-primary font-semibold mt-0.5">Best value for creators</p>
-                      )}
+                      {plan.is_popular && <p className="text-[10px] text-primary font-semibold mt-0.5">Best value for creators</p>}
                       <p className="font-mono text-xl font-bold text-foreground mt-0.5">
-                        ${plan.price_usd}<span className="text-xs text-foreground-muted font-sans font-normal">/mo</span>
+                        ${price}<span className="text-xs text-foreground-muted font-sans font-normal">/{billing === 'yearly' ? 'yr' : 'mo'}</span>
                       </p>
+                      {perMonth && <p className="text-[10px] text-earn font-mono">${perMonth}/mo · Save 17%</p>}
                       <p className="text-[10px] text-foreground-dim font-mono mt-0.5">{plan.monthly_credits.toLocaleString()} credits/month</p>
                     </div>
                     <ul className="space-y-1.5 flex-1">
                       {display.benefits.map((b, i) => (
                         <li key={i} className="flex items-start gap-1.5 text-xs text-foreground-muted">
-                          <Check className="w-3 h-3 text-earn mt-0.5 flex-shrink-0" />
-                          {b}
+                          <Check className="w-3 h-3 text-earn mt-0.5 flex-shrink-0" />{b}
                         </li>
                       ))}
                     </ul>
-                    <button
-                      onClick={() => setPaymentNote('Subscription checkout coming soon. Please configure your payment gateway in Admin Settings.')}
-                      className={`w-full flex items-center justify-center gap-1.5 py-2 rounded text-xs font-semibold transition-opacity hover:opacity-90 ${plan.is_popular ? 'bg-primary text-primary-foreground shadow-cta' : 'border border-border text-foreground hover:border-primary/50'}`}
-                    >
-                      {display.buttonText} <ArrowRight className="w-3 h-3" />
-                    </button>
+                    {isActive ? (
+                      <button disabled className="w-full py-2 rounded text-xs font-semibold border border-earn/30 text-earn opacity-80 cursor-default">
+                        ✓ Your Current Plan
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleStripeSubscription(planKey)}
+                        disabled={!!isCheckingOut}
+                        className={`w-full flex items-center justify-center gap-1.5 py-2 rounded text-xs font-semibold transition-opacity hover:opacity-90 disabled:opacity-60 ${plan.is_popular ? 'bg-primary text-primary-foreground' : 'border border-border text-foreground hover:border-primary/50'}`}>
+                        {isCheckingOut ? 'Redirecting...' : <>{display.buttonText} <ArrowRight className="w-3 h-3" /></>}
+                      </button>
+                    )}
                   </div>
                 );
               })}
             </div>
+
+            {billing === 'yearly' && (
+              <p className="text-xs text-earn font-semibold mt-3">✓ Save 17% with yearly billing</p>
+            )}
 
             {paymentNote && (
               <div className={`flex items-center gap-2 p-3 mt-4 rounded border text-sm ${paymentNote.startsWith('✓') ? 'bg-earn-dim border-earn/20 text-earn' : 'bg-spend-dim border-spend/20 text-spend'}`}>
@@ -299,14 +358,16 @@ export default function Wallet() {
           </div>
         </div>
 
-        {/* ── Credit Packs ── */}
+        {/* Credit Packs */}
         <div>
-          <p className="label-caps mb-1">CREDIT PACKS</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="label-caps">CREDIT PACKS</p>
+            <span className="label-caps text-foreground-dim">ONE-TIME PURCHASE</span>
+          </div>
           <p className="text-xs text-foreground-muted mb-3">Purchase additional credits to instantly boost your engagement campaigns.</p>
           {creditPacks.length === 0 ? (
             <div className="bg-surface border border-border rounded p-6 text-center">
               <p className="text-sm text-foreground-muted">No credit packs available yet.</p>
-              <p className="text-xs text-foreground-dim mt-1">Check back soon or contact support.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -314,8 +375,9 @@ export default function Wallet() {
                 const totalCredits = pack.credits + pack.bonus_credits;
                 const est = engagementEstimate(totalCredits);
                 const priceUSD = Number(pack.price_usd);
+                const isCheckingOut = purchasing === pack.id;
                 return (
-                  <div key={pack.id} className="bg-surface border border-border rounded p-5 relative flex flex-col gap-3">
+                  <div key={pack.id} className="bg-surface border border-border rounded p-5 flex flex-col gap-3">
                     <div>
                       <p className="label-caps mb-1">{pack.name.toUpperCase()}</p>
                       <p className="font-mono text-3xl font-bold value-earn">{totalCredits.toLocaleString()}</p>
@@ -324,7 +386,6 @@ export default function Wallet() {
                         <p className="text-[10px] text-earn font-mono mt-1">+{pack.bonus_credits} bonus credits included</p>
                       )}
                     </div>
-                    {/* Engagement approximations */}
                     <div className="bg-earn-dim border border-earn/15 rounded p-2.5 space-y-1">
                       <p className="label-caps text-earn text-[10px]">APPROX. ENGAGEMENT</p>
                       <p className="text-xs text-foreground-muted font-mono">~{est.comments} comments</p>
@@ -333,23 +394,42 @@ export default function Wallet() {
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-lg font-semibold text-foreground">${priceUSD.toFixed(2)}</span>
                     </div>
-                    <button onClick={() => handlePurchasePack(pack)} disabled={purchasing === pack.id}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 shadow-cta">
+                    {/* Stripe (USD) */}
+                    <button
+                      onClick={() => handleStripePackPurchase(pack)}
+                      disabled={isCheckingOut}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50">
                       <ShoppingCart className="w-4 h-4" />
-                      {purchasing === pack.id ? 'Opening checkout...' : 'Buy Now'}
+                      {isCheckingOut ? 'Opening checkout...' : 'Buy with Card (USD)'}
                     </button>
+                    {/* Razorpay (INR) — kept for backward compat */}
+                    {Number(pack.price_inr) > 0 && (
+                      <button
+                        onClick={() => handleRazorpayPack(pack)}
+                        disabled={isCheckingOut}
+                        className="w-full flex items-center justify-center gap-2 py-2 bg-surface-elevated border border-border rounded text-xs font-semibold text-foreground-muted hover:text-foreground hover:border-primary/40 transition-colors disabled:opacity-50">
+                        Pay with Razorpay (INR)
+                      </button>
+                    )}
                   </div>
                 );
               })}
             </div>
           )}
-          <p className="text-xs text-foreground-dim mt-3 flex items-center gap-1">
-            <ExternalLink className="w-3 h-3" />
-            Payments powered by Razorpay. Connect your Razorpay key in Admin → Settings to enable purchases.
-          </p>
+          <div className="flex items-center gap-3 mt-3">
+            <p className="text-xs text-foreground-dim flex items-center gap-1">
+              <ExternalLink className="w-3 h-3" />
+              Card payments powered by Stripe · INR payments via Razorpay
+            </p>
+            <span className="text-xs text-foreground-dim">•</span>
+            <p className="text-xs text-foreground-dim flex items-center gap-1">
+              <Gift className="w-3 h-3 text-earn" />
+              Daily login: +5 credits
+            </p>
+          </div>
         </div>
 
-        {/* Transaction history */}
+        {/* Transaction History */}
         <div>
           <p className="label-caps mb-3">TRANSACTION HISTORY</p>
           <div className="bg-surface border border-border rounded overflow-hidden">
@@ -371,6 +451,12 @@ export default function Wallet() {
                 </div>
               </div>
             ))}
+          </div>
+          <div className="flex items-start gap-1.5 mt-3 p-3 bg-earn-dim border border-earn/20 rounded">
+            <Zap className="w-3.5 h-3.5 text-earn mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-earn">
+              Daily login rewards, signup bonuses, and early adopter bonuses all appear here automatically.
+            </p>
           </div>
         </div>
       </div>
