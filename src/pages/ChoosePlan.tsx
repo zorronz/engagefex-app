@@ -13,36 +13,34 @@ interface WelcomeOffer {
   offer_price_inr: number; offer_price_usd: number; subscription_discount_pct: number;
 }
 
-// Static engagement-focused plan display data keyed by lowercase plan name
+type BillingCycle = 'monthly' | 'yearly';
+
 const PLAN_DISPLAY: Record<string, {
-  title: string;
-  description: string;
-  benefits: string[];
-  buttonText: string;
+  title: string; description: string; benefits: string[]; buttonText: string;
+  planKey: { monthly: string; yearly: string };
+  yearlyPrice: number; monthlyPrice: number;
 }> = {
   pro: {
-    title: 'Pro',
-    description: 'Get engagement instantly without completing tasks.',
+    title: 'Pro', description: 'Get engagement instantly without completing tasks.',
     benefits: [
-      'Up to ~160 comments per month',
-      'Up to ~500 likes per month',
+      'Up to ~160 comments per month', 'Up to ~500 likes per month',
       '2,000 credits automatically added each month',
-      'Create up to 10 campaigns per day',
-      'Faster campaign completion',
+      'Create up to 10 campaigns per day', 'Faster campaign completion',
     ],
     buttonText: 'Upgrade to Pro',
+    planKey: { monthly: 'pro_monthly', yearly: 'pro_yearly' },
+    monthlyPrice: 5, yearlyPrice: 50,
   },
   agency: {
-    title: 'Agency',
-    description: 'For creators, marketers, and power users.',
+    title: 'Agency', description: 'For creators, marketers, and power users.',
     benefits: [
-      'Up to ~660 comments per month',
-      'Up to ~2,000 likes per month',
+      'Up to ~660 comments per month', 'Up to ~2,000 likes per month',
       '8,000 credits automatically added each month',
-      'Create up to 50 campaigns per day',
-      'Priority campaign processing',
+      'Create up to 50 campaigns per day', 'Priority campaign processing',
     ],
     buttonText: 'Upgrade to Agency',
+    planKey: { monthly: 'agency_monthly', yearly: 'agency_yearly' },
+    monthlyPrice: 15, yearlyPrice: 150,
   },
 };
 
@@ -55,6 +53,8 @@ export default function ChoosePlan() {
   const [offer, setOffer] = useState<WelcomeOffer | null>(null);
   const [loading, setLoading] = useState(true);
   const [offerDismissed, setOfferDismissed] = useState(false);
+  const [billing, setBilling] = useState<BillingCycle>('monthly');
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -84,6 +84,20 @@ export default function ChoosePlan() {
     if (user) await supabase.from('profiles').update({ welcome_offer_shown: true }).eq('user_id', user.id);
   };
 
+  const handleStripeCheckout = async (planKey: string) => {
+    setCheckingOut(planKey);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+        body: { plan: planKey },
+      });
+      if (error || !data?.url) throw new Error(error?.message ?? 'Failed to create checkout');
+      window.location.href = data.url;
+    } catch (e) {
+      alert(`Checkout error: ${e instanceof Error ? e.message : e}`);
+      setCheckingOut(null);
+    }
+  };
+
   const showOffer = offer?.is_enabled && !offerDismissed;
 
   if (loading) {
@@ -110,7 +124,7 @@ export default function ChoosePlan() {
           </p>
         </div>
 
-        {/* ─── Welcome Offer Banner ─── */}
+        {/* Welcome Offer Banner */}
         {showOffer && offer && (
           <div className="relative bg-gradient-to-r from-yellow-400/10 via-primary/10 to-earn/10 border border-yellow-400/30 rounded-xl p-5 overflow-hidden">
             <button onClick={dismissOffer} className="absolute top-3 right-3 text-foreground-muted hover:text-foreground">
@@ -132,12 +146,12 @@ export default function ChoosePlan() {
                 </p>
                 <div className="flex gap-2 mt-3 flex-wrap">
                   <button
-                    onClick={() => navigate('/wallet')}
+                    onClick={() => handleStripeCheckout('pro_monthly')}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 border border-primary/30 text-primary rounded text-xs font-semibold hover:bg-primary/30 transition-colors">
                     <Zap className="w-3 h-3" /> Upgrade to Pro
                   </button>
                   <button
-                    onClick={() => navigate('/wallet')}
+                    onClick={() => handleStripeCheckout('pro_monthly')}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400/20 border border-yellow-400/30 text-yellow-400 rounded text-xs font-semibold hover:bg-yellow-400/30 transition-colors">
                     Claim {offer.subscription_discount_pct}% Launch Discount
                   </button>
@@ -147,7 +161,24 @@ export default function ChoosePlan() {
           </div>
         )}
 
-        {/* ─── Plans Grid ─── */}
+        {/* Billing Toggle */}
+        <div className="flex items-center justify-center gap-1 bg-surface border border-border rounded-full p-1 w-fit mx-auto">
+          <button
+            onClick={() => setBilling('monthly')}
+            className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${billing === 'monthly' ? 'bg-primary text-primary-foreground shadow' : 'text-foreground-muted hover:text-foreground'}`}>
+            Monthly
+          </button>
+          <button
+            onClick={() => setBilling('yearly')}
+            className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold transition-all ${billing === 'yearly' ? 'bg-primary text-primary-foreground shadow' : 'text-foreground-muted hover:text-foreground'}`}>
+            Yearly
+            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${billing === 'yearly' ? 'bg-white/20 text-white' : 'bg-earn-dim text-earn'}`}>
+              SAVE 17%
+            </span>
+          </button>
+        </div>
+
+        {/* Plans Grid */}
         <div>
           <p className="label-caps text-center mb-6">CHOOSE YOUR GROWTH PLAN</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -166,8 +197,8 @@ export default function ChoosePlan() {
                   'Earn up to ~20 comments per day by completing tasks',
                   'Approximately up to ~600 comments per month with consistent activity',
                   '2 campaigns per day',
-                  'Daily login rewards',
-                  'Earn credits by completing campaigns in the marketplace',
+                  'Daily login rewards (+5 credits/day)',
+                  'Earn credits by completing campaigns',
                 ].map((b, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs text-foreground-muted">
                     <Check className="w-3.5 h-3.5 text-earn mt-0.5 flex-shrink-0" />
@@ -187,6 +218,11 @@ export default function ChoosePlan() {
               const key = getDisplayKey(plan.name);
               const display = PLAN_DISPLAY[key];
               if (!display) return null;
+              const planKey = display.planKey[billing];
+              const isCheckingOut = checkingOut === planKey;
+              const price = billing === 'yearly' ? display.yearlyPrice : display.monthlyPrice;
+              const perMonth = billing === 'yearly' ? (display.yearlyPrice / 12).toFixed(2) : null;
+
               return (
                 <div key={plan.id} className={`relative bg-surface border rounded-xl p-5 flex flex-col gap-4 ${plan.is_popular ? 'border-primary/60 shadow-lg shadow-primary/10' : 'border-border'}`}>
                   {plan.is_popular && (
@@ -202,9 +238,12 @@ export default function ChoosePlan() {
                       <p className="text-[10px] text-primary font-semibold mt-0.5">Best value for creators</p>
                     )}
                     <div className="flex items-baseline gap-1 mt-1">
-                      <span className="font-mono text-2xl font-bold text-foreground">${plan.price_usd}</span>
-                      <span className="text-xs text-foreground-muted">/month</span>
+                      <span className="font-mono text-2xl font-bold text-foreground">${price}</span>
+                      <span className="text-xs text-foreground-muted">/{billing === 'yearly' ? 'year' : 'month'}</span>
                     </div>
+                    {billing === 'yearly' && perMonth && (
+                      <p className="text-[10px] text-earn font-mono mt-0.5">${perMonth}/mo — Save 17%</p>
+                    )}
                     <p className="text-xs text-foreground-muted mt-2">{display.description}</p>
                     <p className="text-[10px] text-foreground-dim font-mono mt-1">{plan.monthly_credits.toLocaleString()} credits/month included</p>
                   </div>
@@ -217,17 +256,21 @@ export default function ChoosePlan() {
                     ))}
                   </ul>
                   <button
-                    onClick={() => navigate('/wallet')}
-                    className={`w-full py-2.5 rounded text-sm font-semibold transition-opacity hover:opacity-90 ${plan.is_popular ? 'bg-primary text-primary-foreground' : 'bg-surface-elevated border border-border text-foreground hover:border-primary/50'}`}>
-                    {display.buttonText}
+                    onClick={() => handleStripeCheckout(planKey)}
+                    disabled={isCheckingOut}
+                    className={`w-full py-2.5 rounded text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60 ${plan.is_popular ? 'bg-primary text-primary-foreground' : 'bg-surface-elevated border border-border text-foreground hover:border-primary/50'}`}>
+                    {isCheckingOut ? 'Redirecting...' : display.buttonText}
                   </button>
                 </div>
               );
             })}
           </div>
+          {billing === 'yearly' && (
+            <p className="text-center text-xs text-earn font-semibold mt-3">✓ Save 17% with yearly billing — pay once, grow all year</p>
+          )}
         </div>
 
-        {/* ─── How The Platform Works ─── */}
+        {/* How The Platform Works */}
         <div className="bg-surface border border-border rounded-xl p-6">
           <p className="label-caps text-center mb-5">HOW THE PLATFORM WORKS</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
