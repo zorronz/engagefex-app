@@ -83,6 +83,33 @@ export type Database = {
         }
         Relationships: []
       }
+      early_adopter_settings: {
+        Row: {
+          bonus_credits: number
+          current_count: number
+          id: string
+          is_enabled: boolean
+          max_users: number
+          updated_at: string
+        }
+        Insert: {
+          bonus_credits?: number
+          current_count?: number
+          id?: string
+          is_enabled?: boolean
+          max_users?: number
+          updated_at?: string
+        }
+        Update: {
+          bonus_credits?: number
+          current_count?: number
+          id?: string
+          is_enabled?: boolean
+          max_users?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -229,6 +256,7 @@ export type Database = {
           avatar_url: string | null
           ban_reason: string | null
           created_at: string
+          daily_login_claimed_at: string | null
           device_fingerprint: string | null
           email: string
           id: string
@@ -244,6 +272,9 @@ export type Database = {
           points_spent: number
           referral_code: string
           referred_by: string | null
+          stripe_customer_id: string | null
+          stripe_plan: string | null
+          stripe_subscription_id: string | null
           tasks_completed: number
           tasks_submitted: number
           trust_score: number
@@ -257,6 +288,7 @@ export type Database = {
           avatar_url?: string | null
           ban_reason?: string | null
           created_at?: string
+          daily_login_claimed_at?: string | null
           device_fingerprint?: string | null
           email: string
           id?: string
@@ -272,6 +304,9 @@ export type Database = {
           points_spent?: number
           referral_code?: string
           referred_by?: string | null
+          stripe_customer_id?: string | null
+          stripe_plan?: string | null
+          stripe_subscription_id?: string | null
           tasks_completed?: number
           tasks_submitted?: number
           trust_score?: number
@@ -285,6 +320,7 @@ export type Database = {
           avatar_url?: string | null
           ban_reason?: string | null
           created_at?: string
+          daily_login_claimed_at?: string | null
           device_fingerprint?: string | null
           email?: string
           id?: string
@@ -300,6 +336,9 @@ export type Database = {
           points_spent?: number
           referral_code?: string
           referred_by?: string | null
+          stripe_customer_id?: string | null
+          stripe_plan?: string | null
+          stripe_subscription_id?: string | null
           tasks_completed?: number
           tasks_submitted?: number
           trust_score?: number
