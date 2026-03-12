@@ -239,6 +239,9 @@ Deno.serve(async (req) => {
     const rawBody = await req.text();
     const signature = req.headers.get("x-supabase-signature");
 
+    // Early log — before signature check — so we know Supabase reached the hook
+    console.log(`[${new Date().toISOString()}] AUTH EMAIL HOOK REACHED → method: ${req.method} → sig_present: ${!!signature}`);
+
     // Verify HMAC signature from Supabase
     if (!verifySignature(rawBody, signature)) {
       console.error("Invalid webhook signature");
@@ -249,6 +252,9 @@ Deno.serve(async (req) => {
     }
 
     const payload = JSON.parse(rawBody);
+    const earlyEmail = payload?.user?.email ?? "unknown";
+    const earlyType  = payload?.email_data?.email_action_type ?? "unknown";
+    console.log(`[${new Date().toISOString()}] AUTH EMAIL HOOK TRIGGERED → event: ${earlyType} → email: ${earlyEmail}`);
     const { user, email_data } = payload;
 
     if (!user?.email || !email_data) {
