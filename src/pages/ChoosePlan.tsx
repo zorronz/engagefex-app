@@ -140,7 +140,7 @@ export default function ChoosePlan() {
                   <span className="label-caps px-1.5 py-0.5 bg-yellow-400/20 text-yellow-400 rounded">LIMITED</span>
                 </p>
                 <p className="text-xs text-foreground-muted mt-1">
-                  <b className="text-yellow-400">LAUNCH30</b>
+                  <b className="text-yellow-400"> at checkout. </b>
                 </p>
                 <div className="flex gap-2 mt-3 flex-wrap">
                   <button
