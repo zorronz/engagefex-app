@@ -10,17 +10,16 @@ export default function AuthConfirmPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const tokenHash = searchParams.get('token_hash');
-    const type = searchParams.get('type') as 'email' | 'recovery' | 'invite' | 'email_change' | null;
+    const code = searchParams.get('code');
 
-    if (!tokenHash || !type) {
+    if (!code) {
       setStatus('error');
-      setMessage('Invalid verification link. Please request a new one.');
+      setMessage('Invalid verification link. The code is missing or the link has expired.');
       return;
     }
 
     supabase.auth
-      .verifyOtp({ token_hash: tokenHash, type })
+      .exchangeCodeForSession(code)
       .then(({ error }) => {
         if (error) {
           setStatus('error');
