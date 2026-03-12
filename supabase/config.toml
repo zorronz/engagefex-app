@@ -8,8 +8,3 @@ additional_redirect_urls = [
   "https://id-preview--02fd2ecf-ca5c-4764-8422-ef629cfbc814.lovable.app/auth/confirm",
   "https://id-preview--02fd2ecf-ca5c-4764-8422-ef629cfbc814.lovable.app/reset-password"
 ]
-
-[auth.hook.send_email]
-enabled = true
-uri = "https://ycnupnhjfcespvqjanaa.supabase.co/functions/v1/auth-email-hook"
-secrets = "env(SEND_EMAIL_HOOK_SECRET)"
