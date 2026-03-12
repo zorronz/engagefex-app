@@ -41,7 +41,7 @@ export default function AuthPage() {
         if (error) {
           setError(error.message);
         } else {
-          setSuccess('Account created! Check your inbox for a verification email from noreply@send.marketersconnect.com and click the link to activate your account.');
+          setSuccess('Account created! Check your inbox for a verification email and click the link to activate your account.');
         }
       }
     } finally {
