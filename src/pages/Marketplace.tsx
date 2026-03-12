@@ -5,13 +5,31 @@ import TaskCompletionModal from '@/components/TaskCompletionModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-import { Search, SlidersHorizontal, Zap, ExternalLink, ChevronUp, ChevronDown, Flag, X, AlertCircle } from 'lucide-react';
+import { Search, SlidersHorizontal, Zap, ExternalLink, ChevronUp, ChevronDown, Flag, X, AlertCircle, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 type Task = Tables<'tasks'>;
 type Platform = 'instagram' | 'facebook' | 'youtube' | 'all';
 type TaskTypeFilter = 'like' | 'comment' | 'subscribe' | 'all';
 
 const REPORT_REASONS = ['Spam / fake post', 'Broken link', 'Inappropriate content', 'Already completed / duplicate', 'Other'];
+
+/** Returns daily task limit and plan label based on profile */
+function getPlanInfo(profile: { is_premium?: boolean; wallet_balance?: number } | null): {
+  label: string;
+  dailyLimit: number | null; // null = unlimited
+} {
+  if (!profile) return { label: 'Free', dailyLimit: 30 };
+  // Agency: wallet_balance used as proxy for agency plan (>= 15 wallet balance)
+  // In practice, distinguish by subscription_plans name stored on profile or monthly_credits
+  // For now: is_premium=true AND points_purchased > 5000 → Agency; is_premium=true → Pro
+  if ((profile as { is_premium?: boolean; points_purchased?: number }).is_premium) {
+    const purchased = (profile as { points_purchased?: number }).points_purchased ?? 0;
+    if (purchased >= 8000) return { label: 'Agency', dailyLimit: null };
+    return { label: 'Pro', dailyLimit: 100 };
+  }
+  return { label: 'Free', dailyLimit: 30 };
+}
 
 export default function Marketplace() {
   const { profile, user } = useAuth();
@@ -25,6 +43,7 @@ export default function Marketplace() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
   const [activeCampaignCount, setActiveCampaignCount] = useState(0);
+  const [todayCompletedCount, setTodayCompletedCount] = useState(0);
 
   // Report modal state
   const [reportTask, setReportTask] = useState<Task | null>(null);
@@ -33,6 +52,8 @@ export default function Marketplace() {
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
   const [reportError, setReportError] = useState('');
+
+  const planInfo = getPlanInfo(profile);
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -63,6 +84,18 @@ export default function Marketplace() {
     }
   }, [user?.id]);
 
+  const fetchTodayCount = useCallback(async () => {
+    if (!user?.id) return;
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const { count } = await supabase
+      .from('task_completions')
+      .select('id', { count: 'exact' })
+      .eq('user_id', user.id)
+      .gte('created_at', todayStart.toISOString());
+    setTodayCompletedCount(count ?? 0);
+  }, [user?.id]);
+
   const fetchActiveCampaigns = useCallback(async () => {
     if (!user?.id) return;
     const { count } = await supabase
@@ -77,7 +110,8 @@ export default function Marketplace() {
     fetchTasks();
     fetchCompletions();
     fetchActiveCampaigns();
-  }, [fetchTasks, fetchCompletions, fetchActiveCampaigns]);
+    fetchTodayCount();
+  }, [fetchTasks, fetchCompletions, fetchActiveCampaigns, fetchTodayCount]);
 
   const handleComplete = async (commentText?: string) => {
     if (!selectedTask || !user?.id) return;
@@ -90,6 +124,7 @@ export default function Marketplace() {
     });
     if (error) throw new Error(error.message);
     setCompletedTaskIds(prev => new Set([...prev, selectedTask.id]));
+    setTodayCompletedCount(prev => prev + 1);
   };
 
   const toggleSort = (field: 'reward_points' | 'created_at') => {
@@ -125,28 +160,53 @@ export default function Marketplace() {
     return sortDir === 'desc' ? <ChevronDown className="w-3 h-3 text-foreground-muted" /> : <ChevronUp className="w-3 h-3 text-foreground-muted" />;
   };
 
-  const maxTasks = profile?.is_premium ? 200 : 30;
+  const isAtDailyLimit = planInfo.dailyLimit !== null && todayCompletedCount >= planInfo.dailyLimit;
+
+  const maxCampaigns = profile?.is_premium
+    ? ((profile as { points_purchased?: number }).points_purchased ?? 0) >= 8000 ? 50 : 10
+    : 2;
+
+  const dailyLimitDisplay = planInfo.dailyLimit === null ? '∞' : planInfo.dailyLimit.toString();
 
   const rightPanel = (
     <div className="p-4">
       <div className="space-y-3 mb-6">
         <div className="flex justify-between items-center py-2 border-b border-border-subtle">
           <span className="label-caps">DAILY LIMIT</span>
-          <span className="font-mono text-xs text-foreground">0/{maxTasks}</span>
+          <span className={`font-mono text-xs ${isAtDailyLimit ? 'text-spend font-semibold' : 'text-foreground'}`}>
+            {todayCompletedCount}/{dailyLimitDisplay}
+          </span>
+        </div>
+        <div className="flex justify-between items-center py-2 border-b border-border-subtle">
+          <span className="label-caps">PLAN</span>
+          <span className={`font-mono text-xs font-semibold ${planInfo.label === 'Free' ? 'text-foreground-muted' : 'text-primary'}`}>
+            {planInfo.label}
+          </span>
         </div>
         <div className="flex justify-between items-center py-2 border-b border-border-subtle">
           <span className="label-caps">ACTIVE CAMPAIGNS</span>
-          <span className="font-mono text-xs text-foreground">{activeCampaignCount}/{profile?.is_premium ? 20 : 2}</span>
+          <span className="font-mono text-xs text-foreground">{activeCampaignCount}/{maxCampaigns}</span>
         </div>
         <div className="flex justify-between items-center py-2 border-b border-border-subtle">
           <span className="label-caps">YOUR BALANCE</span>
-          <span className="font-mono text-xs value-earn font-semibold">{profile?.points_balance?.toLocaleString() ?? 0} pts</span>
+          <span className="font-mono text-xs value-earn font-semibold">{profile?.points_balance?.toLocaleString() ?? 0} credits</span>
         </div>
         <div className="flex justify-between items-center py-2">
           <span className="label-caps">TRUST SCORE</span>
           <span className="font-mono text-xs text-foreground">{profile?.trust_score?.toFixed(0) ?? '—'}</span>
         </div>
       </div>
+
+      {/* Upgrade prompt for free users at limit */}
+      {planInfo.label === 'Free' && isAtDailyLimit && (
+        <div className="mb-4 p-3 rounded-lg border border-primary/30 bg-primary/5">
+          <p className="text-xs text-foreground font-semibold mb-1">Daily limit reached</p>
+          <p className="text-xs text-foreground-muted mb-2">Upgrade to Pro for 100 tasks/day or Agency for unlimited.</p>
+          <Link to="/choose-plan" className="flex items-center gap-1 text-xs text-primary font-semibold hover:underline">
+            Upgrade now <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+      )}
 
       <p className="label-caps mb-3">FILTERS</p>
       <div className="space-y-3">
@@ -182,8 +242,8 @@ export default function Marketplace() {
         {/* Header bar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface">
           <div>
-            <h1 className="text-sm font-semibold text-foreground">Task Marketplace</h1>
-            <p className="text-xs text-foreground-muted mt-0.5 font-mono">{filteredTasks.length} active tasks</p>
+            <h1 className="text-sm font-semibold text-foreground">Campaign Marketplace</h1>
+            <p className="text-xs text-foreground-muted mt-0.5 font-mono">{filteredTasks.length} active engagement tasks</p>
           </div>
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-foreground-dim absolute left-3 top-1/2 -translate-y-1/2" />
@@ -191,6 +251,21 @@ export default function Marketplace() {
               className="pl-8 pr-3 py-2 bg-background border border-border rounded text-xs text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/60 font-sans w-48" />
           </div>
         </div>
+
+        {/* Daily limit warning bar */}
+        {isAtDailyLimit && (
+          <div className="px-6 py-2.5 bg-spend-dim border-b border-spend/20 flex items-center justify-between">
+            <p className="text-xs text-spend font-semibold">
+              Daily limit reached ({todayCompletedCount}/{dailyLimitDisplay} engagement tasks).
+              {planInfo.label === 'Free' && ' Upgrade to Pro for 100/day or Agency for unlimited.'}
+            </p>
+            {planInfo.label === 'Free' && (
+              <Link to="/choose-plan" className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                Upgrade <ArrowRight className="w-3 h-3" />
+              </Link>
+            )}
+          </div>
+        )}
 
         {/* Table header */}
         <div className="grid grid-cols-[2fr_1fr_1fr_80px_120px] gap-3 px-6 py-2 bg-surface-elevated border-b border-border text-left">
@@ -220,16 +295,17 @@ export default function Marketplace() {
           ) : filteredTasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center">
               <SlidersHorizontal className="w-8 h-8 text-foreground-dim mb-3" />
-              <p className="text-sm text-foreground-muted">No tasks match your filters</p>
+              <p className="text-sm text-foreground-muted">No engagement tasks match your filters</p>
               <p className="text-xs text-foreground-dim mt-1">Try adjusting the filters or check back later</p>
             </div>
           ) : (
             filteredTasks.map(task => {
               const isCompleted = completedTaskIds.has(task.id);
               const isOwn = task.owner_id === user?.id;
+              const isBlocked = isAtDailyLimit && !isCompleted && !isOwn;
               return (
                 <div key={task.id}
-                  className={`ticker-row grid grid-cols-[2fr_1fr_1fr_80px_120px] gap-3 px-6 py-3.5 ${task.is_boosted ? 'bg-primary/5' : ''}`}>
+                  className={`ticker-row grid grid-cols-[2fr_1fr_1fr_80px_120px] gap-3 px-6 py-3.5 ${task.is_boosted ? 'bg-primary/5' : ''} ${isBlocked ? 'opacity-50' : ''}`}>
                   <div className="flex items-center gap-2 min-w-0">
                     {task.is_boosted && <Zap className="w-3 h-3 text-yellow-400 flex-shrink-0" />}
                     <div className="min-w-0">
@@ -255,6 +331,8 @@ export default function Marketplace() {
                       <span className="label-caps text-foreground-dim">YOUR TASK</span>
                     ) : isCompleted ? (
                       <span className="label-caps text-earn">SUBMITTED</span>
+                    ) : isBlocked ? (
+                      <span className="label-caps text-foreground-dim">LIMIT REACHED</span>
                     ) : (
                       <>
                         <button onClick={() => setReportTask(task)}
