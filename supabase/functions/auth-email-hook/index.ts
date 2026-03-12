@@ -113,7 +113,9 @@ function buildEmail(
   switch (actionType) {
     case "signup":
     case "email_verification": {
-      const confirmUrl = `${baseUrl}?token_hash=${tokenHash}&type=email`;
+      // Use the redirect_to origin if provided (handles preview vs production domains)
+      const origin = redirectTo ? new URL(redirectTo).origin : APP_URL;
+      const confirmUrl = `${origin}/auth/confirm?token_hash=${tokenHash}&type=signup`;
       const subject = "Confirm your EngageExchange account";
       const body = `
         <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#e0e4ef;">Confirm your email</h1>
