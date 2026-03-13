@@ -259,11 +259,13 @@ export type Database = {
           daily_login_claimed_at: string | null
           device_fingerprint: string | null
           email: string
+          first_5_tasks_bonus_paid: boolean
           id: string
           ip_address: string | null
           is_banned: boolean
           is_premium: boolean
           last_seen_at: string | null
+          login_streak: number
           must_change_password: boolean
           name: string
           points_balance: number
@@ -291,11 +293,13 @@ export type Database = {
           daily_login_claimed_at?: string | null
           device_fingerprint?: string | null
           email: string
+          first_5_tasks_bonus_paid?: boolean
           id?: string
           ip_address?: string | null
           is_banned?: boolean
           is_premium?: boolean
           last_seen_at?: string | null
+          login_streak?: number
           must_change_password?: boolean
           name: string
           points_balance?: number
@@ -323,11 +327,13 @@ export type Database = {
           daily_login_claimed_at?: string | null
           device_fingerprint?: string | null
           email?: string
+          first_5_tasks_bonus_paid?: boolean
           id?: string
           ip_address?: string | null
           is_banned?: boolean
           is_premium?: boolean
           last_seen_at?: string | null
+          login_streak?: number
           must_change_password?: boolean
           name?: string
           points_balance?: number
