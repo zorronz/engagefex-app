@@ -6,7 +6,20 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const DAILY_REWARD = 5;
+// Streak reward map: day → credits awarded
+const STREAK_REWARDS: Record<number, number> = {
+  1: 5,
+  2: 5,
+  3: 10,
+  4: 5,
+  5: 20,
+  6: 5,
+  7: 30,
+};
+
+function getStreakReward(streakDay: number): number {
+  return STREAK_REWARDS[streakDay] ?? 5;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -25,10 +38,11 @@ serve(async (req) => {
     if (userError || !user) throw new Error("Not authenticated");
 
     const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("user_id, points_balance, daily_login_claimed_at")
+      .select("user_id, points_balance, points_earned, daily_login_claimed_at, login_streak")
       .eq("user_id", user.id)
       .single();
 
@@ -37,52 +51,52 @@ serve(async (req) => {
     // Check if already claimed today
     const lastClaimed = profile.daily_login_claimed_at;
     if (lastClaimed === today) {
-      return new Response(JSON.stringify({ claimed: false, reason: "already_claimed_today" }), {
+      return new Response(JSON.stringify({ claimed: false, reason: "already_claimed_today", streak: profile.login_streak ?? 1 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const newBalance = (profile.points_balance ?? 0) + DAILY_REWARD;
+    // Calculate new streak
+    const currentStreak = profile.login_streak ?? 0;
+    let newStreak: number;
+    if (lastClaimed === yesterday) {
+      // Consecutive day
+      newStreak = Math.min(currentStreak + 1, 7);
+    } else {
+      // Streak broken or first claim
+      newStreak = 1;
+    }
+
+    const reward = getStreakReward(newStreak);
+    const newBalance = (profile.points_balance ?? 0) + reward;
+    const newPointsEarned = (profile.points_earned ?? 0) + reward;
 
     // Update profile
     await supabase.from("profiles").update({
       points_balance: newBalance,
-      points_earned: supabase.rpc ? undefined : undefined, // will be handled below
+      points_earned: newPointsEarned,
       daily_login_claimed_at: today,
+      login_streak: newStreak,
       updated_at: new Date().toISOString(),
     }).eq("user_id", user.id);
-
-    // Also increment points_earned via raw update
-    await supabase.rpc("pg_temp.noop" as never).catch(() => null); // no-op
-    // Use direct update to increment
-    await supabase.from("profiles").update({
-      points_balance: newBalance,
-      daily_login_claimed_at: today,
-    }).eq("user_id", user.id);
-
-    // Increment points_earned separately
-    const { data: updatedProfile } = await supabase
-      .from("profiles")
-      .select("points_earned")
-      .eq("user_id", user.id)
-      .single();
-
-    if (updatedProfile) {
-      await supabase.from("profiles").update({
-        points_earned: (updatedProfile.points_earned ?? 0) + DAILY_REWARD,
-      }).eq("user_id", user.id);
-    }
 
     // Log transaction
     await supabase.from("wallet_transactions").insert({
       user_id: user.id,
       transaction_type: "bonus",
-      points: DAILY_REWARD,
+      points: reward,
       balance_after: newBalance,
-      description: "Daily login reward",
+      description: `Daily login reward — Day ${newStreak} streak`,
+      reference_type: "daily_login",
     });
 
-    return new Response(JSON.stringify({ claimed: true, credits_awarded: DAILY_REWARD, new_balance: newBalance }), {
+    return new Response(JSON.stringify({
+      claimed: true,
+      credits_awarded: reward,
+      new_balance: newBalance,
+      streak: newStreak,
+      streak_reset: newStreak === 1 && currentStreak > 1,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
