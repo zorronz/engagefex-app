@@ -33,24 +33,35 @@ export default function Leaderboard() {
       setLoading(true);
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      // Fetch weekly completions grouped by user — approved only
-      const { data, error } = await supabase
+      // Fetch weekly completions — approved only
+      const { data: completions, error: compError } = await supabase
         .from('task_completions')
-        .select('user_id, points_awarded, profiles!task_completions_user_id_fkey(name)')
+        .select('user_id, points_awarded')
         .eq('status', 'approved')
         .gte('approved_at', weekAgo);
 
-      if (error || !data) {
+      if (compError || !completions) {
         setLoading(false);
         return;
       }
 
+      // Get unique user IDs
+      const userIds = [...new Set(completions.map(c => c.user_id))];
+      if (userIds.length === 0) { setLoading(false); return; }
+
+      // Fetch names
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, name')
+        .in('user_id', userIds);
+
+      const nameMap = new Map<string, string>((profilesData ?? []).map(p => [p.user_id, p.name]));
+
       // Aggregate per user
       const map = new Map<string, { name: string; tasks: number; earned: number }>();
-      for (const row of data) {
-        const profile = row.profiles as { name: string } | null;
-        if (!profile) continue;
-        const existing = map.get(row.user_id) ?? { name: profile.name, tasks: 0, earned: 0 };
+      for (const row of completions) {
+        const name = nameMap.get(row.user_id) ?? 'Unknown';
+        const existing = map.get(row.user_id) ?? { name, tasks: 0, earned: 0 };
         map.set(row.user_id, {
           name: existing.name,
           tasks: existing.tasks + 1,
