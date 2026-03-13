@@ -151,6 +151,31 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* First 5 Tasks Bonus Banner */}
+        {showFirst5Banner && (
+          <div className="flex items-center justify-between gap-4 px-4 py-3 bg-earn/8 border border-earn/25 rounded-lg">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-earn/15 flex items-center justify-center flex-shrink-0">
+                <Star className="w-4 h-4 text-earn" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-foreground">Starter Bonus</p>
+                <p className="text-xs text-foreground-muted">
+                  Complete your first 5 engagement tasks and earn{' '}
+                  <span className="font-mono text-earn font-semibold">+40 bonus credits</span>.{' '}
+                  <span className="font-mono text-foreground-muted">{approvedTaskCount}/5 done</span>
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/marketplace"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-earn/15 border border-earn/25 text-earn rounded text-xs font-semibold hover:bg-earn/25 transition-colors flex-shrink-0"
+            >
+              Go <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -163,12 +188,21 @@ export default function Dashboard() {
                 : 'Loading...'}
             </p>
           </div>
-          {profile?.is_premium && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded">
-              <Zap className="w-3.5 h-3.5 text-yellow-400" />
-              <span className="label-caps text-yellow-400">PREMIUM</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {loginStreak > 0 && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-orange-400/10 border border-orange-400/20 rounded">
+                <Flame className="w-3.5 h-3.5 text-orange-400" />
+                <span className="font-mono text-xs font-semibold text-orange-400">{loginStreak}</span>
+                <span className="label-caps text-orange-400/80">DAY</span>
+              </div>
+            )}
+            {profile?.is_premium && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded">
+                <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                <span className="label-caps text-yellow-400">PREMIUM</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Stats grid */}
