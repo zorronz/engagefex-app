@@ -10,6 +10,7 @@ import {
   Users,
   Shield,
   TrendingUp,
+  Trophy,
   LogOut,
   ChevronRight,
   Menu,
@@ -22,6 +23,7 @@ const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/marketplace', icon: ListTodo, label: 'Campaign Marketplace' },
   { to: '/campaigns', icon: PlusCircle, label: 'Campaigns' },
+  { to: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
   { to: '/wallet', icon: Wallet, label: 'Wallet' },
   { to: '/referrals', icon: Users, label: 'Referrals' },
 ];
