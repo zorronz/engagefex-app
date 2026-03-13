@@ -4,7 +4,7 @@ import { StatCard, PlatformBadge, TaskTypeBadge } from '@/components/ui/DataComp
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-import { CheckCircle2, ArrowUpRight, ArrowDownRight, Zap, Clock, ArrowRight } from 'lucide-react';
+import { CheckCircle2, ArrowUpRight, ArrowDownRight, Zap, Clock, ArrowRight, Flame, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 type Transaction = Tables<'wallet_transactions'>;
@@ -43,11 +43,19 @@ export default function Dashboard() {
   const [recentTx, setRecentTx] = useState<Transaction[]>([]);
   const [recentCompletions, setRecentCompletions] = useState<Completion[]>([]);
   const [loadingTx, setLoadingTx] = useState(true);
+  const [approvedTaskCount, setApprovedTaskCount] = useState(0);
 
   const remaining = useUpgradeTimer(profile?.created_at);
 
   // Show timer banner if: account < 72h old, not premium, welcome offer not dismissed via upgrade
   const showTimer = !profile?.is_premium && remaining !== null && remaining > 0;
+
+  // First 5 tasks bonus: show if not yet paid and user has completed < 5
+  const first5BonusPaid = (profile as Record<string, unknown>)?.first_5_tasks_bonus_paid as boolean | undefined;
+  const showFirst5Banner = !first5BonusPaid && approvedTaskCount < 5;
+
+  // Login streak from profile
+  const loginStreak = ((profile as Record<string, unknown>)?.login_streak as number | undefined) ?? 0;
 
   useEffect(() => {
     refreshProfile();
@@ -57,7 +65,7 @@ export default function Dashboard() {
     if (!profile?.user_id) return;
 
     const fetchData = async () => {
-      const [txRes, compRes] = await Promise.all([
+      const [txRes, compRes, approvedRes] = await Promise.all([
         supabase
           .from('wallet_transactions')
           .select('*')
@@ -70,9 +78,15 @@ export default function Dashboard() {
           .eq('user_id', profile.user_id)
           .order('created_at', { ascending: false })
           .limit(5),
+        supabase
+          .from('task_completions')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', profile.user_id)
+          .eq('status', 'approved'),
       ]);
       if (txRes.data) setRecentTx(txRes.data);
       if (compRes.data) setRecentCompletions(compRes.data as Completion[]);
+      if (approvedRes.count !== null) setApprovedTaskCount(approvedRes.count);
       setLoadingTx(false);
     };
 
