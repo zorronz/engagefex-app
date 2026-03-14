@@ -128,7 +128,7 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="border-t border-border px-6 py-6 text-center">
-        <p className="label-caps text-foreground-dim">ENGAGEEXCHANGE · HUMAN-POWERED ENGAGEMENT · 2026</p>
+        <p className="label-caps text-foreground-dim">EngagefeX · HUMAN-POWERED ENGAGEMENT · 2026</p>
       </footer>
     </div>
   );
