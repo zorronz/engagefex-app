@@ -11,7 +11,7 @@ const Index = () => {
           <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center">
             <TrendingUp className="w-3.5 h-3.5 text-primary-foreground" />
           </div>
-          <span className="font-mono text-xs font-bold tracking-wider uppercase">EngageExchange</span>
+          <span className="font-mono text-xs font-bold tracking-wider">EngagefeX</span>
         </div>
         <div className="flex items-center gap-3">
           <TooltipProvider>
