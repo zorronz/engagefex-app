@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "npm:stripe@14.21.0";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno&no-check=true";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -41,7 +41,7 @@ serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
-  const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" as never });
+  const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
   const body = await req.text();
   let event: Stripe.Event;
