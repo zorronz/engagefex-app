@@ -70,20 +70,8 @@ export default function DashboardLayout({ children, rightPanel, rightPanelTitle 
             <TrendingUp className="w-3.5 h-3.5 text-primary-foreground" />
           </div>
           <span className="font-mono text-xs font-bold tracking-wider uppercase text-foreground lg:hidden xl:block">
-            EngageExch.
+            EngagefeX
           </span>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="ml-auto lg:hidden xl:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/15 text-primary border border-primary/25 cursor-default select-none leading-none">
-                  Beta
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                This platform is currently in beta testing. Features may change and occasional bugs may occur.
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
           <button
             className="ml-auto text-foreground-dim hover:text-foreground lg:hidden"
             onClick={() => setMobileOpen(false)}
@@ -200,10 +188,7 @@ export default function DashboardLayout({ children, rightPanel, rightPanelTitle 
             <div className="w-5 h-5 bg-primary rounded-sm flex items-center justify-center">
               <TrendingUp className="w-3 h-3 text-primary-foreground" />
             </div>
-            <span className="font-mono text-xs font-bold tracking-wider uppercase">EngageExch.</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/15 text-primary border border-primary/25 select-none leading-none">
-              Beta
-            </span>
+            <span className="font-mono text-xs font-bold tracking-wider uppercase">EngagefeX</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="font-mono text-xs value-earn font-semibold">
