@@ -44,6 +44,42 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_commissions: {
+        Row: {
+          amount: number
+          commission_rate: number
+          created_at: string
+          id: string
+          invoice_id: string
+          referred_user_id: string
+          referrer_id: string
+          status: string
+          subscription_id: string | null
+        }
+        Insert: {
+          amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          referred_user_id: string
+          referrer_id: string
+          status?: string
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          referred_user_id?: string
+          referrer_id?: string
+          status?: string
+          subscription_id?: string | null
+        }
+        Relationships: []
+      }
       credit_packs: {
         Row: {
           bonus_credits: number
