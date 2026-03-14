@@ -19,6 +19,7 @@ import ChangePassword from "./pages/ChangePassword.tsx";
 import ChoosePlan from "./pages/ChoosePlan.tsx";
 import AuthConfirm from "./pages/AuthConfirm.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
+import Affiliate from "./pages/Affiliate.tsx";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
             <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+            <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
