@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "npm:stripe@14.21.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -41,7 +41,7 @@ serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
-  const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+  const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" as never });
 
   const body = await req.text();
   let event: Stripe.Event;
@@ -156,6 +156,81 @@ serve(async (req) => {
 
           logStep("Profile refreshed on invoice.paid", { plan, email: customer.email });
         }
+
+        // ── Affiliate commission logic (Phase 1) ──────────────────────────────
+        // Only process subscription invoices with a real payment amount
+        const isSubscriptionInvoice = !!(invoice.subscription);
+        const amountPaid = invoice.amount_paid ?? 0;
+
+        if (isSubscriptionInvoice && amountPaid > 0) {
+          logStep("Processing affiliate commission", { invoiceId: invoice.id, amountPaid });
+
+          // Look up the paying user by stripe_customer_id
+          const { data: payerProfile } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("stripe_customer_id", customerId)
+            .maybeSingle();
+
+          if (payerProfile?.user_id) {
+            const referredUserId = payerProfile.user_id;
+
+            // Check if this user was referred by someone (uses existing referrals table)
+            const { data: referralRow } = await supabase
+              .from("referrals")
+              .select("referrer_id")
+              .eq("referred_id", referredUserId)
+              .maybeSingle();
+
+            if (referralRow?.referrer_id) {
+              const referrerId = referralRow.referrer_id;
+
+              // Prevent self-referral (safety guard)
+              if (referrerId !== referredUserId) {
+                const subscriptionId = typeof invoice.subscription === "string"
+                  ? invoice.subscription
+                  : (invoice.subscription as { id?: string })?.id ?? null;
+
+                const commissionAmount = (amountPaid / 100) * 0.25; // Stripe amounts are in cents
+
+                // Insert commission — UNIQUE constraint on invoice_id prevents duplicates
+                const { error: commissionError } = await supabase
+                  .from("affiliate_commissions")
+                  .insert({
+                    referrer_id: referrerId,
+                    referred_user_id: referredUserId,
+                    subscription_id: subscriptionId,
+                    invoice_id: invoice.id,
+                    amount: commissionAmount,
+                    commission_rate: 0.25,
+                    status: "pending",
+                  });
+
+                if (commissionError) {
+                  // Unique violation = already recorded; all other errors are logged
+                  if (!commissionError.message.includes("duplicate") && !commissionError.message.includes("unique")) {
+                    logStep("ERROR inserting affiliate commission", { error: commissionError.message });
+                  } else {
+                    logStep("Duplicate commission skipped (already recorded)", { invoiceId: invoice.id });
+                  }
+                } else {
+                  logStep("Affiliate commission recorded", {
+                    referrerId,
+                    referredUserId,
+                    commissionAmount,
+                    invoiceId: invoice.id,
+                  });
+                }
+              }
+            } else {
+              logStep("No referrer found for user, skipping commission", { referredUserId });
+            }
+          } else {
+            logStep("Could not resolve paying user from stripe_customer_id", { customerId });
+          }
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         break;
       }
 
