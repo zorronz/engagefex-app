@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   Zap,
-  ArrowUpCircle
+  ArrowUpCircle,
+  Link2
 } from 'lucide-react';
 
 const navItems = [
@@ -26,6 +27,7 @@ const navItems = [
   { to: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
   { to: '/wallet', icon: Wallet, label: 'Wallet' },
   { to: '/referrals', icon: Users, label: 'Referrals' },
+  { to: '/affiliate', icon: Link2, label: 'Affiliate' },
 ];
 
 interface DashboardLayoutProps {
