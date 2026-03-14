@@ -65,7 +65,7 @@ export default function AuthPage() {
             <div className="w-7 h-7 bg-primary rounded-sm flex items-center justify-center">
               <TrendingUp className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-mono text-sm font-semibold tracking-wider text-foreground uppercase">EngageExchange</span>
+            <span className="font-mono text-sm font-semibold tracking-wider text-foreground">EngagefeX</span>
           </div>
           <div className="space-y-6">
             <h1 className="text-3xl font-semibold text-foreground leading-tight">
@@ -101,7 +101,7 @@ export default function AuthPage() {
             <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center">
               <TrendingUp className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
-            <span className="font-mono text-xs font-semibold tracking-wider uppercase">EngageExchange</span>
+            <span className="font-mono text-xs font-semibold tracking-wider">EngagefeX</span>
           </div>
 
           <div className="mb-8">

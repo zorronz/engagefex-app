@@ -11,7 +11,7 @@ const Index = () => {
           <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center">
             <TrendingUp className="w-3.5 h-3.5 text-primary-foreground" />
           </div>
-          <span className="font-mono text-xs font-bold tracking-wider uppercase">EngageExchange</span>
+          <span className="font-mono text-xs font-bold tracking-wider">EngagefeX</span>
         </div>
         <div className="flex items-center gap-3">
           <TooltipProvider>
@@ -128,7 +128,7 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="border-t border-border px-6 py-6 text-center">
-        <p className="label-caps text-foreground-dim">ENGAGEEXCHANGE · HUMAN-POWERED ENGAGEMENT · 2026</p>
+        <p className="label-caps text-foreground-dim">EngagefeX · HUMAN-POWERED ENGAGEMENT · 2026</p>
       </footer>
     </div>
   );
