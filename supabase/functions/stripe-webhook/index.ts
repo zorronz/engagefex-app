@@ -41,7 +41,7 @@ serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
-  const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" as never });
+  const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
   const body = await req.text();
   let event: Stripe.Event;
