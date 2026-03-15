@@ -89,12 +89,12 @@ export default function AdminUsers({ logAction }: AdminUsersProps) {
       </div>
 
       <div className="bg-surface border border-border rounded overflow-hidden overflow-x-auto">
-        <div className="grid grid-cols-[1fr_1.2fr_70px_60px_70px_60px_160px] gap-2 px-4 py-2.5 bg-surface-elevated border-b border-border min-w-[750px]">
+        <div className="grid grid-cols-[1fr_1.2fr_70px_60px_70px_60px_200px] gap-2 px-4 py-2.5 bg-surface-elevated border-b border-border min-w-[800px]">
           {['NAME', 'EMAIL', 'BALANCE', 'TRUST', 'STATUS', 'PLAN', 'ACTIONS'].map(h => <span key={h} className="label-caps">{h}</span>)}
         </div>
         {filtered.map(u => (
           <React.Fragment key={u.id}>
-            <div className="grid grid-cols-[1fr_1.2fr_70px_60px_70px_60px_160px] gap-2 px-4 py-3 border-b border-border-subtle hover:bg-surface-elevated transition-colors items-center min-w-[750px]">
+            <div className="grid grid-cols-[1fr_1.2fr_70px_60px_70px_60px_200px] gap-2 px-4 py-3 border-b border-border-subtle hover:bg-surface-elevated transition-colors items-center min-w-[800px]">
               <button onClick={() => setExpandedId(expandedId === u.id ? null : u.id)} className="flex items-center gap-1.5 text-left">
                 {expandedId === u.id ? <ChevronUp className="w-3 h-3 text-foreground-dim flex-shrink-0" /> : <ChevronDown className="w-3 h-3 text-foreground-dim flex-shrink-0" />}
                 <span className="text-xs text-foreground truncate font-medium">{u.name}</span>
@@ -113,6 +113,15 @@ export default function AdminUsers({ logAction }: AdminUsersProps) {
                   className={`px-2 py-1 rounded text-[10px] font-medium transition-colors ${u.is_banned ? 'bg-earn/10 border border-earn/20 text-earn hover:bg-earn/20' : 'bg-spend/10 border border-spend/20 text-spend hover:bg-spend/20'}`}>
                   {u.is_banned ? 'Unban' : 'Ban'}
                 </button>
+                {isSuperAdmin && adminUser?.id !== u.user_id && (
+                  <button
+                    onClick={() => startImpersonation({ userId: u.user_id, name: u.name, email: u.email })}
+                    className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    <UserCheck className="w-2.5 h-2.5" />
+                    Login As
+                  </button>
+                )}
               </div>
             </div>
 
