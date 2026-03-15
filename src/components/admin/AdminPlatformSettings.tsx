@@ -188,6 +188,52 @@ export default function AdminPlatformSettings() {
           </div>
         </div>
       )}
+
+      {/* ─── SUPPORT WIDGET ─── */}
+      {tab === 'support' && (
+        <div className="space-y-5">
+          <div className="bg-surface border border-border rounded p-5 space-y-3">
+            <p className="label-caps flex items-center gap-2"><MessageCircle className="w-3.5 h-3.5" />SUPPORT WIDGET SCRIPT</p>
+            <p className="text-xs text-foreground-muted">
+              Paste the widget script tag from Tawk.to, Crisp, Intercom, or any chat platform.
+              It will be injected automatically for all logged-in users.
+            </p>
+            <textarea
+              rows={6}
+              value={draft.support_widget_script ?? ''}
+              onChange={e => setDraft(d => ({ ...d, support_widget_script: e.target.value }))}
+              placeholder={`<!-- Example: Tawk.to script -->\n<script type="text/javascript">\nvar Tawk_API=Tawk_API||{};\n...\n</script>`}
+              className="w-full bg-background border border-border rounded px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-primary/60 resize-none"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => saveSetting('support_widget_script', draft.support_widget_script ?? '')}
+                disabled={saving === 'support_widget_script'}
+                className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saved === 'support_widget_script' ? 'Saved!' : 'Save Script'}
+              </button>
+              {settings.support_widget_script && (
+                <button
+                  onClick={() => { setDraft(d => ({ ...d, support_widget_script: '' })); saveSetting('support_widget_script', ''); }}
+                  className="px-3 py-2 bg-spend/10 border border-spend/20 text-spend rounded text-xs font-medium hover:bg-spend/20 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {settings.support_widget_script && (
+              <p className="text-xs text-earn font-mono">✓ Widget script is configured and active</p>
+            )}
+          </div>
+          <div className="bg-surface-elevated border border-border-subtle rounded p-3">
+            <p className="text-xs text-foreground-muted">
+              <span className="text-foreground font-medium">How it works:</span> The script is stored securely and injected once when users load the dashboard. Users can access support via the sidebar → Support page.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
