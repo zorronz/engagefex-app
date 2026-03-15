@@ -51,6 +51,7 @@ export type Database = {
           created_at: string
           id: string
           invoice_id: string
+          paid_at: string | null
           referred_user_id: string
           referrer_id: string
           status: string
@@ -62,6 +63,7 @@ export type Database = {
           created_at?: string
           id?: string
           invoice_id: string
+          paid_at?: string | null
           referred_user_id: string
           referrer_id: string
           status?: string
@@ -73,6 +75,7 @@ export type Database = {
           created_at?: string
           id?: string
           invoice_id?: string
+          paid_at?: string | null
           referred_user_id?: string
           referrer_id?: string
           status?: string
