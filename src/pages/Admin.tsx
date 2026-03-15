@@ -12,6 +12,7 @@ import AdminSecurity from '@/components/admin/AdminSecurity';
 import AdminLogs from '@/components/admin/AdminLogs';
 import AdminPlatformSettings from '@/components/admin/AdminPlatformSettings';
 import AdminPricing from '@/components/admin/AdminPricing';
+import AdminAffiliatePayouts from '@/components/admin/AdminAffiliatePayouts';
 import {
   Shield,
   LayoutDashboard,
@@ -24,6 +25,7 @@ import {
   ScrollText,
   Settings,
   DollarSign,
+  Handshake,
 } from 'lucide-react';
 
 type Tab = 'overview' | 'users' | 'tasks' | 'referrals' | 'payments' | 'economy' | 'security' | 'logs' | 'platform' | 'pricing';
