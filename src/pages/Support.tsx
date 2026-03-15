@@ -18,14 +18,9 @@ export default function Support() {
       // Attempt to trigger widget open if available (Tawk.to / Crisp APIs)
       if (script) {
         try {
-          // Tawk.to
-          if ((window as Record<string, unknown>).Tawk_API) {
-            ((window as Record<string, unknown>).Tawk_API as { maximize?: () => void }).maximize?.();
-          }
-          // Crisp
-          if ((window as Record<string, unknown>).$crisp) {
-            ((window as Record<string, unknown>).$crisp as { push: (args: unknown[]) => void }).push(['do', 'chat:open']);
-          }
+          const w = window as unknown as Record<string, unknown>;
+          if (w.Tawk_API) (w.Tawk_API as { maximize?: () => void }).maximize?.();
+          if (w.$crisp) (w.$crisp as { push: (args: unknown[]) => void }).push(['do', 'chat:open']);
         } catch { /* widget not ready */ }
       }
     })();
