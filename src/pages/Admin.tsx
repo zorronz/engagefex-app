@@ -28,7 +28,7 @@ import {
   Handshake,
 } from 'lucide-react';
 
-type Tab = 'overview' | 'users' | 'tasks' | 'referrals' | 'payments' | 'economy' | 'security' | 'logs' | 'platform' | 'pricing';
+type Tab = 'overview' | 'users' | 'tasks' | 'referrals' | 'payments' | 'economy' | 'security' | 'logs' | 'platform' | 'pricing' | 'affiliate-payouts';
 
 export default function Admin() {
   const { user } = useAuth();
