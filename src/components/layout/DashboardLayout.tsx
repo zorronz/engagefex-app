@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import ImpersonationBanner from '@/components/ImpersonationBanner';
 import {
   LayoutDashboard,
   ListTodo,
@@ -17,7 +18,8 @@ import {
   X,
   Zap,
   ArrowUpCircle,
-  Link2
+  Link2,
+  HelpCircle,
 } from 'lucide-react';
 
 const navItems = [
@@ -28,6 +30,7 @@ const navItems = [
   { to: '/wallet', icon: Wallet, label: 'Wallet' },
   { to: '/referrals', icon: Users, label: 'Referrals' },
   { to: '/affiliate', icon: Link2, label: 'Affiliate' },
+  { to: '/support', icon: HelpCircle, label: 'Support' },
 ];
 
 interface DashboardLayoutProps {
