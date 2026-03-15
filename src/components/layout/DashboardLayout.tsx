@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import ImpersonationBanner from '@/components/ImpersonationBanner';
 import {
   LayoutDashboard,
   ListTodo,
@@ -17,7 +18,8 @@ import {
   X,
   Zap,
   ArrowUpCircle,
-  Link2
+  Link2,
+  HelpCircle,
 } from 'lucide-react';
 
 const navItems = [
@@ -28,6 +30,7 @@ const navItems = [
   { to: '/wallet', icon: Wallet, label: 'Wallet' },
   { to: '/referrals', icon: Users, label: 'Referrals' },
   { to: '/affiliate', icon: Link2, label: 'Affiliate' },
+  { to: '/support', icon: HelpCircle, label: 'Support' },
 ];
 
 interface DashboardLayoutProps {
@@ -181,6 +184,7 @@ export default function DashboardLayout({ children, rightPanel, rightPanelTitle 
 
       {/* Main content */}
       <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
+        <ImpersonationBanner />
         {/* Mobile top bar */}
         <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-surface h-14">
           <button onClick={() => setMobileOpen(true)} className="text-foreground-muted">
