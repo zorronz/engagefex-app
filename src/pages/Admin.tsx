@@ -52,16 +52,17 @@ export default function Admin() {
   }, [user]);
 
   const tabs: { key: Tab; icon: React.ElementType; label: string }[] = [
-    { key: 'overview',  icon: LayoutDashboard, label: 'Overview' },
-    { key: 'users',     icon: Users,           label: 'Users' },
-    { key: 'tasks',     icon: ListTodo,        label: 'Tasks' },
-    { key: 'referrals', icon: GitBranch,       label: 'Referrals' },
-    { key: 'payments',  icon: CreditCard,      label: 'Payments' },
-    { key: 'economy',   icon: TrendingUp,      label: 'Economy' },
-    { key: 'security',  icon: Lock,            label: 'Security' },
-    { key: 'logs',      icon: ScrollText,      label: 'Activity Logs' },
-    { key: 'pricing',   icon: DollarSign,      label: 'Pricing' },
-    { key: 'platform',  icon: Settings,        label: 'Platform Settings' },
+    { key: 'overview',          icon: LayoutDashboard, label: 'Overview' },
+    { key: 'users',             icon: Users,           label: 'Users' },
+    { key: 'tasks',             icon: ListTodo,        label: 'Tasks' },
+    { key: 'referrals',         icon: GitBranch,       label: 'Referrals' },
+    { key: 'payments',          icon: CreditCard,      label: 'Payments' },
+    { key: 'economy',           icon: TrendingUp,      label: 'Economy' },
+    { key: 'security',          icon: Lock,            label: 'Security' },
+    { key: 'logs',              icon: ScrollText,      label: 'Activity Logs' },
+    { key: 'pricing',           icon: DollarSign,      label: 'Pricing' },
+    { key: 'affiliate-payouts', icon: Handshake,       label: 'Affiliate Payouts' },
+    { key: 'platform',          icon: Settings,        label: 'Platform Settings' },
   ];
 
   return (
@@ -97,16 +98,17 @@ export default function Admin() {
         </div>
 
         {/* Tab content */}
-        {activeTab === 'overview'  && <AdminOverview />}
-        {activeTab === 'users'     && <AdminUsers logAction={logAction} />}
-        {activeTab === 'tasks'     && <AdminTasks logAction={logAction} />}
-        {activeTab === 'referrals' && <AdminReferrals />}
-        {activeTab === 'payments'  && <AdminPayments logAction={logAction} />}
-        {activeTab === 'economy'   && <AdminEconomy logAction={logAction} />}
-        {activeTab === 'security'  && <AdminSecurity />}
-        {activeTab === 'logs'      && <AdminLogs />}
-        {activeTab === 'pricing'   && <AdminPricing />}
-        {activeTab === 'platform'  && <AdminPlatformSettings />}
+        {activeTab === 'overview'          && <AdminOverview />}
+        {activeTab === 'users'             && <AdminUsers logAction={logAction} />}
+        {activeTab === 'tasks'             && <AdminTasks logAction={logAction} />}
+        {activeTab === 'referrals'         && <AdminReferrals />}
+        {activeTab === 'payments'          && <AdminPayments logAction={logAction} />}
+        {activeTab === 'economy'           && <AdminEconomy logAction={logAction} />}
+        {activeTab === 'security'          && <AdminSecurity />}
+        {activeTab === 'logs'             && <AdminLogs />}
+        {activeTab === 'pricing'           && <AdminPricing />}
+        {activeTab === 'affiliate-payouts' && <AdminAffiliatePayouts />}
+        {activeTab === 'platform'          && <AdminPlatformSettings />}
       </div>
     </DashboardLayout>
   );
