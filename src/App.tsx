@@ -53,26 +53,30 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/auth/confirm" element={<AuthConfirm />} />
-            <Route path="/ref/:code" element={<AuthPage />} />
-            {/* Force password change — accessible when logged in */}
-            <Route path="/change-password" element={<ChangePassword />} />
-            <Route path="/choose-plan" element={<ProtectedRoute><ChoosePlan /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-            <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
-            <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-            <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
-            <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
-            <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <ImpersonationProvider>
+            <SupportWidgetLoader />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/confirm" element={<AuthConfirm />} />
+              <Route path="/ref/:code" element={<AuthPage />} />
+              {/* Force password change — accessible when logged in */}
+              <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/choose-plan" element={<ProtectedRoute><ChoosePlan /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+              <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
+              <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+              <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
+              <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+              <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
+              <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ImpersonationProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
