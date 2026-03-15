@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, Eye, Save, Globe, Image as ImageIcon, Palette, CreditCard, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Upload, Eye, Save, Globe, Image as ImageIcon, Palette, CreditCard, ToggleLeft, ToggleRight, MessageCircle } from 'lucide-react';
 
 interface Setting { key: string; value: string | null }
 
@@ -14,7 +14,7 @@ export default function AdminPlatformSettings() {
   const [saved, setSaved] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [tab, setTab] = useState<'branding' | 'gateways'>('branding');
+  const [tab, setTab] = useState<'branding' | 'gateways' | 'support'>('branding');
   const fileRef = useRef<HTMLInputElement>(null);
   const faviconRef = useRef<HTMLInputElement>(null);
 

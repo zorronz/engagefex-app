@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/Auth.tsx";
@@ -20,6 +21,8 @@ import ChoosePlan from "./pages/ChoosePlan.tsx";
 import AuthConfirm from "./pages/AuthConfirm.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
 import Affiliate from "./pages/Affiliate.tsx";
+import Support from "./pages/Support.tsx";
+import SupportWidgetLoader from "./components/SupportWidgetLoader.tsx";
 
 const queryClient = new QueryClient();
 
