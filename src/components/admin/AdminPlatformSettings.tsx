@@ -94,8 +94,8 @@ export default function AdminPlatformSettings() {
     <div className="space-y-5 max-w-2xl">
       {/* Tab switcher */}
       <div className="flex gap-0.5 border-b border-border">
-        {([['branding', Globe, 'Branding'], ['gateways', CreditCard, 'Payment Integrations']] as const).map(([key, Icon, label]) => (
-          <button key={key} onClick={() => setTab(key)}
+        {([['branding', Globe, 'Branding'], ['gateways', CreditCard, 'Payment Integrations'], ['support', MessageCircle, 'Support Widget']] as const).map(([key, Icon, label]) => (
+          <button key={key} onClick={() => setTab(key as 'branding' | 'gateways' | 'support')}
             className={`flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-medium border-b-2 transition-colors ${tab === key ? 'border-primary text-primary' : 'border-transparent text-foreground-muted hover:text-foreground'}`}>
             <Icon className="w-3.5 h-3.5" />{label}
           </button>
