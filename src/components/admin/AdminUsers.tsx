@@ -12,6 +12,8 @@ interface AdminUsersProps {
 }
 
 export default function AdminUsers({ logAction }: AdminUsersProps) {
+  const { isSuperAdmin, user: adminUser } = useAuth();
+  const { startImpersonation } = useImpersonation();
   const [users, setUsers] = useState<Profile[]>([]);
   const [filtered, setFiltered] = useState<Profile[]>([]);
   const [search, setSearch] = useState('');

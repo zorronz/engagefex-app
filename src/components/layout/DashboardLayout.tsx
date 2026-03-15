@@ -184,6 +184,7 @@ export default function DashboardLayout({ children, rightPanel, rightPanelTitle 
 
       {/* Main content */}
       <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
+        <ImpersonationBanner />
         {/* Mobile top bar */}
         <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-surface h-14">
           <button onClick={() => setMobileOpen(true)} className="text-foreground-muted">
