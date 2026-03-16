@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { TrendingUp, ArrowRight, Zap, Shield, Users } from 'lucide-react';
+import { TrendingUp, ArrowRight, Zap, Shield, Users, BarChart2, Target, Heart, Star } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -35,48 +35,41 @@ const Index = () => {
       <section className="px-6 py-24 max-w-4xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-earn/10 border border-earn/20 rounded-full mb-8">
           <span className="w-1.5 h-1.5 bg-earn rounded-full" />
-          <span className="label-caps text-earn">HUMAN-POWERED ENGAGEMENT EXCHANGE</span>
+          <span className="label-caps text-earn">Organic Growth Accelerator for Creators & Marketers</span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold text-foreground leading-tight mb-6">
-          The social capital<br />
-          <span className="font-mono text-earn">marketplace</span>
+          Turn Organic Posts Into<br />
+          <span className="font-mono text-earn">Lead Generation Machines</span>
         </h1>
         <p className="text-lg text-foreground-muted max-w-xl mx-auto mb-10">
-          Complete engagement tasks. Earn points. Launch campaigns. Every action is a quantifiable trade in the fairest social exchange platform.
+          EngagefeX helps creators and marketers generate the early engagement their posts need so social media algorithms push their content to more people — resulting in more reach, followers, leads, and sales.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link to="/auth?mode=signup" className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity shadow-cta">
-            Get Started <ArrowRight className="w-4 h-4" />
+            Start Growing Organically <ArrowRight className="w-4 h-4" />
           </Link>
           <Link to="/auth?mode=signup" className="flex items-center justify-center gap-2 px-6 py-3 border border-border text-foreground rounded text-sm font-medium hover:border-primary/50 transition-colors">
-            Boost Engagement <Zap className="w-4 h-4" />
+            See How It Works <Zap className="w-4 h-4" />
           </Link>
         </div>
         <p className="text-xs text-foreground-dim mt-4 font-mono">+50 bonus points on signup · no credit card required</p>
       </section>
 
-      {/* Point economy table */}
-      <section className="px-6 py-12 max-w-3xl mx-auto">
-        <p className="label-caps text-center mb-2">POINT ECONOMY</p>
-        <p className="text-xs text-foreground-dim text-center mb-6 font-mono">Transparent rates — earn by doing, spend to promote</p>
-        <div className="bg-surface border border-border rounded overflow-hidden">
-          <div className="grid grid-cols-4 px-5 py-2.5 bg-surface-elevated border-b border-border">
-            {['TASK', 'PLATFORM', 'EARN', 'COST'].map(h => <span key={h} className="label-caps">{h}</span>)}
-          </div>
+      {/* Benefits section */}
+      <section className="px-6 py-12 max-w-4xl mx-auto">
+        <p className="label-caps text-center mb-2">WHY ENGAGEFEX</p>
+        <p className="text-sm text-foreground-muted text-center mb-8">Turn Engagement Into Real Growth</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { t: 'Like', p: 'Instagram', earn: 2, cost: 4 },
-            { t: 'Comment', p: 'Instagram', earn: 8, cost: 12 },
-            { t: 'Like', p: 'Facebook', earn: 2, cost: 4 },
-            { t: 'Comment', p: 'Facebook', earn: 8, cost: 12 },
-            { t: 'Comment', p: 'YouTube', earn: 10, cost: 15 },
-            { t: 'Subscribe', p: 'YouTube', earn: 12, cost: 18 },
-            { t: 'Comment', p: 'LinkedIn', earn: 10, cost: 15 },
-          ].map((r, i) => (
-            <div key={i} className="grid grid-cols-4 px-5 py-3 border-b border-border-subtle last:border-0 hover:bg-surface-elevated transition-colors">
-              <span className="font-mono text-xs text-foreground">{r.t}</span>
-              <span className="text-xs text-foreground-muted">{r.p}</span>
-              <span className="font-mono text-xs value-earn font-semibold">+{r.earn} pts</span>
-              <span className="font-mono text-xs value-spend font-semibold">{r.cost} pts</span>
+            { icon: BarChart2, title: 'More Reach', desc: 'Early engagement signals encourage social media algorithms to push your content to a wider audience.' },
+            { icon: Users, title: 'More Followers', desc: 'Increased visibility brings more profile visits and new followers discovering your content.' },
+            { icon: Target, title: 'More Leads', desc: 'Turn organic posts into lead generation assets without spending money on ads.' },
+            { icon: Star, title: 'More Social Proof', desc: 'Posts with engagement attract more interaction and build trust with new viewers.' },
+          ].map(({ icon: Icon, title, desc }) => (
+            <div key={title} className="bg-surface border border-border rounded p-5">
+              <Icon className="w-5 h-5 text-earn mb-3" />
+              <h3 className="text-sm font-semibold text-foreground mb-2">{title}</h3>
+              <p className="text-xs text-foreground-muted leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>
@@ -87,9 +80,9 @@ const Index = () => {
         <p className="label-caps text-center mb-8">HOW IT WORKS</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
-            { step: '01', title: 'Create Account', desc: 'Sign up in seconds. Get 50 bonus points immediately. No credit card required.' },
-            { step: '02', title: 'Complete Tasks', desc: 'Browse the marketplace. Like, comment, and subscribe to earn points on Instagram, Facebook, YouTube, and LinkedIn.' },
-            { step: '03', title: 'Launch Campaigns', desc: 'Spend your points to promote your own content. Set your target, pay per action, get real engagement.' },
+            { step: '01', title: 'Create Your Free Account', desc: 'Sign up in seconds and receive bonus credits to start engaging immediately.' },
+            { step: '02', title: 'Earn Engagement Credits', desc: 'Complete simple engagement tasks like likes, comments, and subscriptions across supported platforms.' },
+            { step: '03', title: 'Promote Your Own Posts', desc: 'Spend credits to launch campaigns that boost engagement on your own content.' },
           ].map(({ step, title, desc }) => (
             <div key={step} className="bg-surface border border-border rounded p-5">
               <span className="font-mono text-3xl font-bold text-primary/30">{step}</span>
@@ -103,9 +96,12 @@ const Index = () => {
       {/* Features */}
       <section className="px-6 py-12 max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { icon: Zap, title: 'Task Marketplace', desc: 'Browse hundreds of tasks sorted by platform, reward, and type. Start a task, complete it, get paid.' },
-          { icon: Shield, title: 'Anti-Cheat System', desc: 'Countdown timers, comment verification, trust scores, and IP monitoring ensure every engagement is real.' },
-          { icon: Users, title: 'Referral Program', desc: 'Earn bonus points per referral signup and commission on their future purchases.' },
+          { icon: Zap, title: 'Algorithm Boost', desc: 'Generate early engagement signals that help social media algorithms push your content further.' },
+          { icon: BarChart2, title: 'Multi-Platform Growth', desc: 'Boost engagement across Facebook, Instagram, YouTube, and LinkedIn.' },
+          { icon: Heart, title: 'Real Human Engagement', desc: 'Every action comes from real users inside the platform ecosystem.' },
+          { icon: Star, title: 'Earn While You Engage', desc: 'Earn credits by helping other creators and spend them to promote your own posts.' },
+          { icon: Users, title: 'Affiliate Earnings', desc: 'Earn recurring commissions by referring creators and marketers to EngagefeX.' },
+          { icon: Shield, title: 'Anti-Abuse Protection', desc: 'Built-in safeguards ensure engagement quality and prevent fake activity.' },
         ].map(({ icon: Icon, title, desc }) => (
           <div key={title} className="bg-surface border border-border rounded p-5">
             <Icon className="w-5 h-5 text-primary mb-3" />
@@ -135,3 +131,4 @@ const Index = () => {
 };
 
 export default Index;
+
