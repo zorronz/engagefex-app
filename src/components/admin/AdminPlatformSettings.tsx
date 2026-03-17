@@ -14,7 +14,7 @@ export default function AdminPlatformSettings() {
   const [saved, setSaved] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [tab, setTab] = useState<'branding' | 'gateways' | 'support'>('branding');
+  const [tab, setTab] = useState<'branding' | 'gateways' | 'support' | 'tracking'>('branding');
   const fileRef = useRef<HTMLInputElement>(null);
   const faviconRef = useRef<HTMLInputElement>(null);
 
