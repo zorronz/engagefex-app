@@ -20,6 +20,7 @@ import {
   ArrowUpCircle,
   Link2,
   HelpCircle,
+  Receipt,
 } from 'lucide-react';
 
 const navItems = [
@@ -30,6 +31,7 @@ const navItems = [
   { to: '/wallet', icon: Wallet, label: 'Wallet' },
   { to: '/referrals', icon: Users, label: 'Referrals' },
   { to: '/affiliate', icon: Link2, label: 'Affiliate' },
+  { to: '/billing', icon: Receipt, label: 'Billing' },
   { to: '/support', icon: HelpCircle, label: 'Support' },
 ];
 
