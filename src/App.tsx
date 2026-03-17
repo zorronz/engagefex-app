@@ -22,7 +22,9 @@ import AuthConfirm from "./pages/AuthConfirm.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
 import Affiliate from "./pages/Affiliate.tsx";
 import Support from "./pages/Support.tsx";
+import Billing from "./pages/Billing.tsx";
 import SupportWidgetLoader from "./components/SupportWidgetLoader.tsx";
+import TrackingScriptsLoader from "./components/TrackingScriptsLoader.tsx";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +57,7 @@ const App = () => (
         <AuthProvider>
           <ImpersonationProvider>
             <SupportWidgetLoader />
+            <TrackingScriptsLoader />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
@@ -73,6 +76,7 @@ const App = () => (
               <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
               <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
               <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+              <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
