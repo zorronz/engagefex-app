@@ -22,7 +22,9 @@ import AuthConfirm from "./pages/AuthConfirm.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
 import Affiliate from "./pages/Affiliate.tsx";
 import Support from "./pages/Support.tsx";
+import Billing from "./pages/Billing.tsx";
 import SupportWidgetLoader from "./components/SupportWidgetLoader.tsx";
+import TrackingScriptsLoader from "./components/TrackingScriptsLoader.tsx";
 
 const queryClient = new QueryClient();
 

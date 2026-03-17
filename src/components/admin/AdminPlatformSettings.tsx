@@ -234,6 +234,114 @@ export default function AdminPlatformSettings() {
           </div>
         </div>
       )}
+      {/* ─── TRACKING SCRIPTS ─── */}
+      {tab === 'tracking' && (
+        <div className="space-y-5">
+          {/* Google Analytics */}
+          <div className="bg-surface border border-border rounded p-5 space-y-3">
+            <p className="label-caps flex items-center gap-2"><Code2 className="w-3.5 h-3.5" />GOOGLE ANALYTICS ID</p>
+            <p className="text-xs text-foreground-muted">Your GA4 Measurement ID (e.g. G-XXXXXXXXXX). Leave blank to disable.</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={draft.ga_id ?? ''}
+                onChange={e => setDraft(d => ({ ...d, ga_id: e.target.value }))}
+                placeholder="G-XXXXXXXXXX"
+                className="flex-1 bg-background border border-border rounded px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-primary/60"
+              />
+              <button
+                onClick={() => saveSetting('ga_id', draft.ga_id ?? '')}
+                disabled={saving === 'ga_id'}
+                className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saved === 'ga_id' ? 'Saved!' : 'Save'}
+              </button>
+            </div>
+          </div>
+
+          {/* Facebook Pixel */}
+          <div className="bg-surface border border-border rounded p-5 space-y-3">
+            <p className="label-caps flex items-center gap-2"><Code2 className="w-3.5 h-3.5" />FACEBOOK PIXEL ID</p>
+            <p className="text-xs text-foreground-muted">Your Meta Pixel ID (numeric). Leave blank to disable.</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={draft.fb_pixel_id ?? ''}
+                onChange={e => setDraft(d => ({ ...d, fb_pixel_id: e.target.value }))}
+                placeholder="1234567890123456"
+                className="flex-1 bg-background border border-border rounded px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-primary/60"
+              />
+              <button
+                onClick={() => saveSetting('fb_pixel_id', draft.fb_pixel_id ?? '')}
+                disabled={saving === 'fb_pixel_id'}
+                className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saved === 'fb_pixel_id' ? 'Saved!' : 'Save'}
+              </button>
+            </div>
+          </div>
+
+          {/* Custom Head Script */}
+          <div className="bg-surface border border-border rounded p-5 space-y-3">
+            <p className="label-caps flex items-center gap-2"><Code2 className="w-3.5 h-3.5" />CUSTOM HEAD SCRIPT</p>
+            <p className="text-xs text-foreground-muted">Scripts injected inside the <code className="bg-surface-elevated px-1 rounded">&lt;head&gt;</code> tag. Useful for tag managers or custom tracking.</p>
+            <textarea
+              rows={5}
+              value={draft.custom_head_script ?? ''}
+              onChange={e => setDraft(d => ({ ...d, custom_head_script: e.target.value }))}
+              placeholder={`<script>\n  // Custom head script\n</script>`}
+              className="w-full bg-background border border-border rounded px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-primary/60 resize-none"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => saveSetting('custom_head_script', draft.custom_head_script ?? '')}
+                disabled={saving === 'custom_head_script'}
+                className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saved === 'custom_head_script' ? 'Saved!' : 'Save Script'}
+              </button>
+              {settings.custom_head_script && (
+                <span className="text-xs text-earn font-mono">✓ Active</span>
+              )}
+            </div>
+          </div>
+
+          {/* Custom Body Script */}
+          <div className="bg-surface border border-border rounded p-5 space-y-3">
+            <p className="label-caps flex items-center gap-2"><Code2 className="w-3.5 h-3.5" />CUSTOM BODY SCRIPT</p>
+            <p className="text-xs text-foreground-muted">Scripts injected before the closing <code className="bg-surface-elevated px-1 rounded">&lt;/body&gt;</code> tag.</p>
+            <textarea
+              rows={5}
+              value={draft.custom_body_script ?? ''}
+              onChange={e => setDraft(d => ({ ...d, custom_body_script: e.target.value }))}
+              placeholder={`<script>\n  // Custom body script\n</script>`}
+              className="w-full bg-background border border-border rounded px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-primary/60 resize-none"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => saveSetting('custom_body_script', draft.custom_body_script ?? '')}
+                disabled={saving === 'custom_body_script'}
+                className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saved === 'custom_body_script' ? 'Saved!' : 'Save Script'}
+              </button>
+              {settings.custom_body_script && (
+                <span className="text-xs text-earn font-mono">✓ Active</span>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-surface-elevated border border-border-subtle rounded p-3">
+            <p className="text-xs text-foreground-muted">
+              <span className="text-foreground font-medium">How it works:</span> Scripts are injected once when the application loads. Changes take effect on the next page load. Only non-empty values are injected.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
