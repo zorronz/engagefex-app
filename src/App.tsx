@@ -57,6 +57,7 @@ const App = () => (
         <AuthProvider>
           <ImpersonationProvider>
             <SupportWidgetLoader />
+            <TrackingScriptsLoader />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
