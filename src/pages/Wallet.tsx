@@ -314,7 +314,7 @@ export default function Wallet() {
                 const planKey = display.planKey[billing];
                 const price = billing === 'yearly' ? display.yearlyPrice : display.monthlyPrice;
                 const perMonth = billing === 'yearly' ? (display.yearlyPrice / 12).toFixed(2) : null;
-                const isActive = stripeSubscription.subscribed && stripeSubscription.plan?.startsWith(key);
+                const isActive = isPlanActive(key);
                 const isCheckingOut = purchasing === planKey;
 
                 return (
