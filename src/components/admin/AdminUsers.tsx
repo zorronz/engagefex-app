@@ -40,6 +40,53 @@ export default function AdminUsers({ logAction }: AdminUsersProps) {
     logAction(ban ? 'ban_user' : 'unban_user', 'user', userId);
   };
 
+  // Helper: update user_roles table for a given plan tier
+  const syncUserRole = async (userId: string, plan: 'pro' | 'agency' | 'free') => {
+    // Remove any existing plan roles for this user
+    await supabase.from('user_roles').delete()
+      .eq('user_id', userId)
+      .in('role', ['user'] as const);
+
+    // Always ensure base 'user' role exists (every user has it)
+    await supabase.from('user_roles').upsert(
+      { user_id: userId, role: 'user' as const },
+      { onConflict: 'user_id,role' }
+    );
+    void plan; // role table uses admin/super_admin/user/moderator — plan is tracked in profiles
+  };
+
+  const handlePremium = async (userId: string, isPremium: boolean) => {
+    const plan = isPremium ? 'pro_monthly' : null;
+    const { error } = await supabase.from('profiles').update({
+      is_premium: isPremium,
+      stripe_plan: plan,
+    }).eq('user_id', userId);
+    if (error) { console.error('Failed to update premium:', error); return; }
+    setUsers(u => u.map(p => p.user_id === userId ? { ...p, is_premium: isPremium, stripe_plan: plan } : p));
+    logAction(isPremium ? 'grant_premium' : 'revoke_premium', 'user', userId, { plan });
+  };
+
+  const handleAgency = async (userId: string, isAgency: boolean) => {
+    const currentProfile = users.find(p => p.user_id === userId);
+    const alreadyAgency = currentProfile?.stripe_plan?.startsWith('agency');
+    if (alreadyAgency === isAgency) return;
+
+    const plan = isAgency ? 'agency_monthly' : null;
+    const { error } = await supabase.from('profiles').update({
+      is_premium: isAgency ? true : false,
+      stripe_plan: plan,
+    }).eq('user_id', userId);
+    if (error) { console.error('Failed to update agency plan:', error); return; }
+    setUsers(u => u.map(p => p.user_id === userId
+      ? { ...p, is_premium: isAgency, stripe_plan: plan }
+      : p));
+    logAction(isAgency ? 'grant_agency' : 'revoke_agency', 'user', userId, { plan });
+  };
+    await supabase.from('profiles').update({ is_banned: ban, ban_reason: ban ? 'Banned by admin' : null }).eq('user_id', userId);
+    setUsers(u => u.map(p => p.user_id === userId ? { ...p, is_banned: ban } : p));
+    logAction(ban ? 'ban_user' : 'unban_user', 'user', userId);
+  };
+
   const handlePremium = async (userId: string, isPremium: boolean) => {
     await supabase.from('profiles').update({ is_premium: isPremium }).eq('user_id', userId);
     setUsers(u => u.map(p => p.user_id === userId ? { ...p, is_premium: isPremium } : p));
