@@ -40,19 +40,7 @@ export default function AdminUsers({ logAction }: AdminUsersProps) {
     logAction(ban ? 'ban_user' : 'unban_user', 'user', userId);
   };
 
-  const syncUserRole = async (userId: string, plan: 'pro' | 'agency' | 'free') => {
-    // Remove any existing plan roles for this user
-    await supabase.from('user_roles').delete()
-      .eq('user_id', userId)
-      .in('role', ['user'] as const);
 
-    // Always ensure base 'user' role exists (every user has it)
-    await supabase.from('user_roles').upsert(
-      { user_id: userId, role: 'user' as const },
-      { onConflict: 'user_id,role' }
-    );
-    void plan; // role table uses admin/super_admin/user/moderator — plan is tracked in profiles
-  };
 
   const handlePremium = async (userId: string, isPremium: boolean) => {
     const plan = isPremium ? 'pro_monthly' : null;
