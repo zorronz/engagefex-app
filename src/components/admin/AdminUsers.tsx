@@ -40,10 +40,34 @@ export default function AdminUsers({ logAction }: AdminUsersProps) {
     logAction(ban ? 'ban_user' : 'unban_user', 'user', userId);
   };
 
+
+
   const handlePremium = async (userId: string, isPremium: boolean) => {
-    await supabase.from('profiles').update({ is_premium: isPremium }).eq('user_id', userId);
-    setUsers(u => u.map(p => p.user_id === userId ? { ...p, is_premium: isPremium } : p));
-    logAction(isPremium ? 'grant_premium' : 'revoke_premium', 'user', userId);
+    const plan = isPremium ? 'pro_monthly' : null;
+    const { error } = await supabase.from('profiles').update({
+      is_premium: isPremium,
+      stripe_plan: plan,
+    }).eq('user_id', userId);
+    if (error) { console.error('Failed to update premium:', error); return; }
+    setUsers(u => u.map(p => p.user_id === userId ? { ...p, is_premium: isPremium, stripe_plan: plan } : p));
+    logAction(isPremium ? 'grant_premium' : 'revoke_premium', 'user', userId, { plan });
+  };
+
+  const handleAgency = async (userId: string, isAgency: boolean) => {
+    const currentProfile = users.find(p => p.user_id === userId);
+    const alreadyAgency = currentProfile?.stripe_plan?.startsWith('agency');
+    if (alreadyAgency === isAgency) return;
+
+    const plan = isAgency ? 'agency_monthly' : null;
+    const { error } = await supabase.from('profiles').update({
+      is_premium: isAgency ? true : false,
+      stripe_plan: plan,
+    }).eq('user_id', userId);
+    if (error) { console.error('Failed to update agency plan:', error); return; }
+    setUsers(u => u.map(p => p.user_id === userId
+      ? { ...p, is_premium: isAgency, stripe_plan: plan }
+      : p));
+    logAction(isAgency ? 'grant_agency' : 'revoke_agency', 'user', userId, { plan });
   };
 
   const handleAdjustPoints = async (userId: string, current: number, delta: number) => {
@@ -134,11 +158,21 @@ export default function AdminUsers({ logAction }: AdminUsersProps) {
               <span className="font-mono text-xs value-earn">{u.points_balance}</span>
               <span className={`font-mono text-xs ${Number(u.trust_score) >= 80 ? 'text-earn' : Number(u.trust_score) >= 50 ? 'text-yellow-400' : 'text-spend'}`}>{Number(u.trust_score).toFixed(0)}</span>
               <span className={`label-caps ${u.is_banned ? 'text-spend' : 'text-earn'}`}>{u.is_banned ? 'BANNED' : 'ACTIVE'}</span>
-              <span className={`label-caps ${u.is_premium ? 'text-yellow-400' : 'text-foreground-muted'}`}>{u.is_premium ? 'PRO' : 'FREE'}</span>
+              <span className={`label-caps ${u.stripe_plan?.startsWith('agency') ? 'text-purple-400' : u.is_premium ? 'text-yellow-400' : 'text-foreground-muted'}`}>
+                {u.stripe_plan?.startsWith('agency') ? 'AGENCY' : u.is_premium ? 'PRO' : 'FREE'}
+              </span>
               <div className="flex gap-1 flex-wrap">
-                <button onClick={() => handlePremium(u.user_id, !u.is_premium)}
-                  className={`px-2 py-1 rounded text-[10px] font-medium transition-colors ${u.is_premium ? 'bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 hover:bg-yellow-400/20' : 'bg-surface-elevated border border-border text-foreground-muted hover:text-foreground'}`}>
-                  {u.is_premium ? 'Revoke' : 'Pro'}
+                {/* Pro toggle — only when not agency */}
+                {!u.stripe_plan?.startsWith('agency') && (
+                  <button onClick={() => handlePremium(u.user_id, !u.is_premium)}
+                    className={`px-2 py-1 rounded text-[10px] font-medium transition-colors ${u.is_premium ? 'bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 hover:bg-yellow-400/20' : 'bg-surface-elevated border border-border text-foreground-muted hover:text-foreground'}`}>
+                    {u.is_premium ? 'Revoke' : 'Pro'}
+                  </button>
+                )}
+                {/* Agency toggle */}
+                <button onClick={() => handleAgency(u.user_id, !u.stripe_plan?.startsWith('agency'))}
+                  className={`px-2 py-1 rounded text-[10px] font-medium transition-colors ${u.stripe_plan?.startsWith('agency') ? 'bg-purple-400/10 border border-purple-400/20 text-purple-400 hover:bg-purple-400/20' : 'bg-surface-elevated border border-border text-foreground-muted hover:text-foreground'}`}>
+                  {u.stripe_plan?.startsWith('agency') ? 'Revoke' : 'Agency'}
                 </button>
                 <button onClick={() => handleBan(u.user_id, !u.is_banned)}
                   className={`px-2 py-1 rounded text-[10px] font-medium transition-colors ${u.is_banned ? 'bg-earn/10 border border-earn/20 text-earn hover:bg-earn/20' : 'bg-spend/10 border border-spend/20 text-spend hover:bg-spend/20'}`}>
