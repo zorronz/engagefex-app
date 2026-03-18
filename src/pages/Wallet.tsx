@@ -194,9 +194,23 @@ export default function Wallet() {
   const txTypeColor = (t: string) => ['earned', 'bonus', 'referral', 'refunded'].includes(t) ? 'value-earn' : 'value-spend';
   const txTypeSign = (tx: Transaction) => ['earned', 'bonus', 'referral', 'refunded'].includes(tx.transaction_type) ? '+' : '';
 
-  const currentPlanName = stripeSubscription.subscribed
-    ? (stripeSubscription.plan?.includes('agency') ? 'Agency' : 'Pro')
-    : (profile?.is_premium ? 'Premium' : 'Free');
+  // Determine active plan from Stripe first, then fall back to admin-granted stripe_plan on profile
+  const activePlanKey: string | null =
+    stripeSubscription.subscribed && stripeSubscription.plan
+      ? stripeSubscription.plan
+      : profile?.stripe_plan ?? null;
+
+  const currentPlanName = activePlanKey
+    ? (activePlanKey.startsWith('agency') ? 'Agency' : 'Pro')
+    : 'Free';
+
+  // A plan tier is "active" if the user has it via Stripe OR via admin grant on profile
+  const isPlanActive = (tier: string) => {
+    if (!activePlanKey) return tier === 'free';
+    return activePlanKey.startsWith(tier);
+  };
+
+  const hasAnyPaidPlan = !!activePlanKey;
 
   return (
     <DashboardLayout>
