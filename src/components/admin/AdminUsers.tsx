@@ -40,7 +40,6 @@ export default function AdminUsers({ logAction }: AdminUsersProps) {
     logAction(ban ? 'ban_user' : 'unban_user', 'user', userId);
   };
 
-  // Helper: update user_roles table for a given plan tier
   const syncUserRole = async (userId: string, plan: 'pro' | 'agency' | 'free') => {
     // Remove any existing plan roles for this user
     await supabase.from('user_roles').delete()
