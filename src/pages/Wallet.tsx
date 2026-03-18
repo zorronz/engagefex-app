@@ -244,14 +244,14 @@ export default function Wallet() {
                   <p className="text-xs text-foreground-muted mt-0.5">
                     {stripeSubscription.subscribed
                       ? `Active until ${stripeSubscription.subscription_end ? new Date(stripeSubscription.subscription_end).toLocaleDateString() : '—'}`
-                      : profile?.is_premium
-                        ? 'You have access to premium features.'
+                      : hasAnyPaidPlan
+                        ? `You have access to ${currentPlanName} features.`
                         : 'Upgrade to get monthly credits, higher limits, and priority access.'}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {(stripeSubscription.subscribed || profile?.is_premium) && (
+                {hasAnyPaidPlan && (
                   <span className="flex items-center gap-1 px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded text-xs text-yellow-400 font-semibold">
                     Active
                   </span>
