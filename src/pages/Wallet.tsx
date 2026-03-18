@@ -286,8 +286,8 @@ export default function Wallet() {
             {/* Plan cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Free */}
-              <div className={`relative border rounded-lg p-4 flex flex-col gap-3 ${!profile?.is_premium && !stripeSubscription.subscribed ? 'border-primary/40 bg-primary/5' : 'border-border bg-background'}`}>
-                {!profile?.is_premium && !stripeSubscription.subscribed && (
+              <div className={`relative border rounded-lg p-4 flex flex-col gap-3 ${isPlanActive('free') ? 'border-primary/40 bg-primary/5' : 'border-border bg-background'}`}>
+                {isPlanActive('free') && (
                   <span className="absolute -top-2.5 left-3 px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full">CURRENT</span>
                 )}
                 <div>
