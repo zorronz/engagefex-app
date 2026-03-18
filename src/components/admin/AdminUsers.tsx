@@ -48,10 +48,29 @@ export default function AdminUsers({ logAction }: AdminUsersProps) {
 
   const handleAdjustPoints = async (userId: string, current: number, delta: number) => {
     const newBalance = Math.max(0, current + delta);
-    await supabase.from('profiles').update({ points_balance: newBalance }).eq('user_id', userId);
 
-    // log wallet transaction
-    await supabase.from('wallet_transactions').insert({
+    // Build profile update: also track points_earned / points_spent for consistency
+    const profileUpdate: Record<string, number> = { points_balance: newBalance };
+    if (delta > 0) {
+      const profile = users.find(p => p.user_id === userId);
+      profileUpdate.points_earned = (profile?.points_earned ?? 0) + delta;
+    } else {
+      const profile = users.find(p => p.user_id === userId);
+      profileUpdate.points_spent = Math.max(0, (profile?.points_spent ?? 0) + Math.abs(delta));
+    }
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update(profileUpdate)
+      .eq('user_id', userId);
+
+    if (profileError) {
+      console.error('Failed to update points in profiles:', profileError);
+      return;
+    }
+
+    // Log wallet transaction
+    const { error: txError } = await supabase.from('wallet_transactions').insert({
       user_id: userId,
       transaction_type: delta > 0 ? 'bonus' : 'spent',
       points: Math.abs(delta),
@@ -59,7 +78,19 @@ export default function AdminUsers({ logAction }: AdminUsersProps) {
       description: `Admin ${delta > 0 ? 'added' : 'removed'} ${Math.abs(delta)} points`,
     });
 
-    setUsers(u => u.map(p => p.user_id === userId ? { ...p, points_balance: newBalance } : p));
+    if (txError) console.error('Failed to log wallet transaction:', txError);
+
+    // Only update local state after confirmed DB success
+    setUsers(u => u.map(p => {
+      if (p.user_id !== userId) return p;
+      return {
+        ...p,
+        points_balance: newBalance,
+        points_earned: delta > 0 ? (p.points_earned ?? 0) + delta : p.points_earned,
+        points_spent: delta < 0 ? Math.max(0, (p.points_spent ?? 0) + Math.abs(delta)) : p.points_spent,
+      };
+    }));
+
     logAction('adjust_points', 'user', userId, { delta, newBalance });
   };
 
