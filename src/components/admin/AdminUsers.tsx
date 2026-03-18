@@ -82,16 +82,6 @@ export default function AdminUsers({ logAction }: AdminUsersProps) {
       : p));
     logAction(isAgency ? 'grant_agency' : 'revoke_agency', 'user', userId, { plan });
   };
-    await supabase.from('profiles').update({ is_banned: ban, ban_reason: ban ? 'Banned by admin' : null }).eq('user_id', userId);
-    setUsers(u => u.map(p => p.user_id === userId ? { ...p, is_banned: ban } : p));
-    logAction(ban ? 'ban_user' : 'unban_user', 'user', userId);
-  };
-
-  const handlePremium = async (userId: string, isPremium: boolean) => {
-    await supabase.from('profiles').update({ is_premium: isPremium }).eq('user_id', userId);
-    setUsers(u => u.map(p => p.user_id === userId ? { ...p, is_premium: isPremium } : p));
-    logAction(isPremium ? 'grant_premium' : 'revoke_premium', 'user', userId);
-  };
 
   const handleAdjustPoints = async (userId: string, current: number, delta: number) => {
     const newBalance = Math.max(0, current + delta);
