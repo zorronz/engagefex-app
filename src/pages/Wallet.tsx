@@ -194,9 +194,23 @@ export default function Wallet() {
   const txTypeColor = (t: string) => ['earned', 'bonus', 'referral', 'refunded'].includes(t) ? 'value-earn' : 'value-spend';
   const txTypeSign = (tx: Transaction) => ['earned', 'bonus', 'referral', 'refunded'].includes(tx.transaction_type) ? '+' : '';
 
-  const currentPlanName = stripeSubscription.subscribed
-    ? (stripeSubscription.plan?.includes('agency') ? 'Agency' : 'Pro')
-    : (profile?.is_premium ? 'Premium' : 'Free');
+  // Determine active plan from Stripe first, then fall back to admin-granted stripe_plan on profile
+  const activePlanKey: string | null =
+    stripeSubscription.subscribed && stripeSubscription.plan
+      ? stripeSubscription.plan
+      : profile?.stripe_plan ?? null;
+
+  const currentPlanName = activePlanKey
+    ? (activePlanKey.startsWith('agency') ? 'Agency' : 'Pro')
+    : 'Free';
+
+  // A plan tier is "active" if the user has it via Stripe OR via admin grant on profile
+  const isPlanActive = (tier: string) => {
+    if (!activePlanKey) return tier === 'free';
+    return activePlanKey.startsWith(tier);
+  };
+
+  const hasAnyPaidPlan = !!activePlanKey;
 
   return (
     <DashboardLayout>
@@ -230,14 +244,14 @@ export default function Wallet() {
                   <p className="text-xs text-foreground-muted mt-0.5">
                     {stripeSubscription.subscribed
                       ? `Active until ${stripeSubscription.subscription_end ? new Date(stripeSubscription.subscription_end).toLocaleDateString() : '—'}`
-                      : profile?.is_premium
-                        ? 'You have access to premium features.'
+                      : hasAnyPaidPlan
+                        ? `You have access to ${currentPlanName} features.`
                         : 'Upgrade to get monthly credits, higher limits, and priority access.'}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {(stripeSubscription.subscribed || profile?.is_premium) && (
+                {hasAnyPaidPlan && (
                   <span className="flex items-center gap-1 px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded text-xs text-yellow-400 font-semibold">
                     Active
                   </span>
@@ -272,8 +286,8 @@ export default function Wallet() {
             {/* Plan cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Free */}
-              <div className={`relative border rounded-lg p-4 flex flex-col gap-3 ${!profile?.is_premium && !stripeSubscription.subscribed ? 'border-primary/40 bg-primary/5' : 'border-border bg-background'}`}>
-                {!profile?.is_premium && !stripeSubscription.subscribed && (
+              <div className={`relative border rounded-lg p-4 flex flex-col gap-3 ${isPlanActive('free') ? 'border-primary/40 bg-primary/5' : 'border-border bg-background'}`}>
+                {isPlanActive('free') && (
                   <span className="absolute -top-2.5 left-3 px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full">CURRENT</span>
                 )}
                 <div>
@@ -300,7 +314,7 @@ export default function Wallet() {
                 const planKey = display.planKey[billing];
                 const price = billing === 'yearly' ? display.yearlyPrice : display.monthlyPrice;
                 const perMonth = billing === 'yearly' ? (display.yearlyPrice / 12).toFixed(2) : null;
-                const isActive = stripeSubscription.subscribed && stripeSubscription.plan?.startsWith(key);
+                const isActive = isPlanActive(key);
                 const isCheckingOut = purchasing === planKey;
 
                 return (
