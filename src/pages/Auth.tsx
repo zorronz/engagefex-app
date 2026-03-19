@@ -1,17 +1,25 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
 
+const REFERRAL_STORAGE_KEY = 'engagefex_ref';
+
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
+  const { code: routeCode } = useParams<{ code?: string }>();
   const [mode, setMode] = useState<'login' | 'signup'>(
     searchParams.get('mode') === 'signup' ? 'signup' : 'login'
   );
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [referralCode, setReferralCode] = useState(searchParams.get('ref') || '');
+
+  // Priority: route param (/ref/:code) > query param (?ref=) > localStorage
+  const resolveRef = () =>
+    routeCode || searchParams.get('ref') || localStorage.getItem(REFERRAL_STORAGE_KEY) || '';
+
+  const [referralCode, setReferralCode] = useState(resolveRef);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,6 +27,17 @@ export default function AuthPage() {
 
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+
+  // Persist ref code to localStorage whenever it is resolved from URL/route
+  useEffect(() => {
+    const code = routeCode || searchParams.get('ref');
+    if (code) {
+      localStorage.setItem(REFERRAL_STORAGE_KEY, code);
+      setReferralCode(code);
+      // If visiting /ref/:code, switch to signup mode
+      if (routeCode) setMode('signup');
+    }
+  }, [routeCode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +60,8 @@ export default function AuthPage() {
         if (error) {
           setError(error.message);
         } else {
+          // Clear stored referral code after successful signup
+          localStorage.removeItem(REFERRAL_STORAGE_KEY);
           setSuccess('Account created! Check your inbox for a verification email and click the link to activate your account.');
         }
       }
