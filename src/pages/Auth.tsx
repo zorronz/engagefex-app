@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const REFERRAL_STORAGE_KEY = 'engagefex_ref';
 
@@ -20,6 +21,7 @@ export default function AuthPage() {
     routeCode || searchParams.get('ref') || localStorage.getItem(REFERRAL_STORAGE_KEY) || '';
 
   const [referralCode, setReferralCode] = useState(resolveRef);
+  const [referrerName, setReferrerName] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,6 +40,22 @@ export default function AuthPage() {
       if (routeCode) setMode('signup');
     }
   }, [routeCode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch referrer name when a referral code is present and we're in signup mode
+  useEffect(() => {
+    const code = referralCode.trim();
+    if (!code || mode !== 'signup') { setReferrerName(null); return; }
+    let cancelled = false;
+    supabase
+      .from('profiles')
+      .select('name')
+      .eq('referral_code', code)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setReferrerName(data?.name ?? null);
+      });
+    return () => { cancelled = true; };
+  }, [referralCode, mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,6 +142,13 @@ export default function AuthPage() {
             </div>
             <span className="font-mono text-xs font-semibold tracking-wider">EngagefeX</span>
           </div>
+
+          {mode === 'signup' && referrerName && (
+            <div className="flex items-center gap-2 mb-6 px-3 py-2.5 bg-surface border border-border rounded text-sm text-foreground-muted">
+              <span className="text-earn">👋</span>
+              <span>You were invited by <span className="text-foreground font-medium">{referrerName}</span></span>
+            </div>
+          )}
 
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-foreground mb-1">
