@@ -28,6 +28,17 @@ export default function AuthPage() {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
+  // Persist ref code to localStorage whenever it is resolved from URL/route
+  useEffect(() => {
+    const code = routeCode || searchParams.get('ref');
+    if (code) {
+      localStorage.setItem(REFERRAL_STORAGE_KEY, code);
+      setReferralCode(code);
+      // If visiting /ref/:code, switch to signup mode
+      if (routeCode) setMode('signup');
+    }
+  }, [routeCode]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -49,6 +60,8 @@ export default function AuthPage() {
         if (error) {
           setError(error.message);
         } else {
+          // Clear stored referral code after successful signup
+          localStorage.removeItem(REFERRAL_STORAGE_KEY);
           setSuccess('Account created! Check your inbox for a verification email and click the link to activate your account.');
         }
       }
