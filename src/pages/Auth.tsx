@@ -22,6 +22,7 @@ export default function AuthPage() {
 
   const [referralCode, setReferralCode] = useState(resolveRef);
   const [referrerName, setReferrerName] = useState<string | null>(null);
+  const [loadingReferrer, setLoadingReferrer] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -41,21 +42,25 @@ export default function AuthPage() {
     }
   }, [routeCode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch referrer name when a referral code is present and we're in signup mode
+  // Fetch referrer name whenever a referral code is present (regardless of mode)
   useEffect(() => {
     const code = referralCode.trim();
-    if (!code || mode !== 'signup') { setReferrerName(null); return; }
+    if (!code) { setReferrerName(null); setLoadingReferrer(false); return; }
     let cancelled = false;
+    setLoadingReferrer(true);
     supabase
       .from('profiles')
       .select('name')
       .eq('referral_code', code)
       .maybeSingle()
       .then(({ data }) => {
-        if (!cancelled) setReferrerName(data?.name ?? null);
+        if (!cancelled) {
+          setReferrerName(data?.name ?? null);
+          setLoadingReferrer(false);
+        }
       });
     return () => { cancelled = true; };
-  }, [referralCode, mode]);
+  }, [referralCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
