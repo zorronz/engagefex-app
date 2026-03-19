@@ -143,6 +143,13 @@ export default function AuthPage() {
             <span className="font-mono text-xs font-semibold tracking-wider">EngagefeX</span>
           </div>
 
+          {mode === 'signup' && referrerName && (
+            <div className="flex items-center gap-2 mb-6 px-3 py-2.5 bg-surface border border-border rounded text-sm text-foreground-muted">
+              <span className="text-earn">👋</span>
+              <span>You were invited by <span className="text-foreground font-medium">{referrerName}</span></span>
+            </div>
+          )}
+
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-foreground mb-1">
               {mode === 'login' ? 'Sign in to your account' : 'Create account'}
