@@ -149,12 +149,12 @@ export default function AuthPage() {
           </div>
 
           {mode === 'signup' && referralCode.trim() && (
-            <div className="flex items-center gap-2 mb-6 px-3 py-2.5 bg-surface border border-border rounded text-sm text-foreground-muted">
-              <span>👋</span>
+            <div className="flex items-center gap-2 mb-6 px-3 py-2.5 bg-earn-dim border border-earn/30 rounded text-sm text-foreground-muted">
+              <span className="text-base">👋</span>
               {loadingReferrer ? (
                 <span>A friend invited you to EngagefeX</span>
               ) : referrerName ? (
-                <span><span className="text-foreground font-medium">{referrerName}</span> invited you to EngagefeX</span>
+                <span>You are invited to EngagefeX by <span className="text-earn font-semibold">{referrerName}</span></span>
               ) : (
                 <span>A friend invited you to EngagefeX</span>
               )}
