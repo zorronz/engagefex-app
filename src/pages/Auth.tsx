@@ -45,6 +45,7 @@ export default function AuthPage() {
   // Fetch referrer name whenever a referral code is present (regardless of mode)
   useEffect(() => {
     const code = referralCode.trim();
+    console.log("Referral code detected:", code);
     if (!code) { setReferrerName(null); setLoadingReferrer(false); return; }
     let cancelled = false;
     setLoadingReferrer(true);
@@ -53,7 +54,9 @@ export default function AuthPage() {
       .select('name')
       .eq('referral_code', code)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        console.log("Referrer lookup result:", data, "error:", error);
+        console.log("Referrer name:", data?.name);
         if (!cancelled) {
           setReferrerName(data?.name ?? null);
           setLoadingReferrer(false);
