@@ -115,11 +115,14 @@ export default function AuthPage() {
             <span className="font-mono text-sm font-semibold tracking-wider text-foreground">EngagefeX</span>
           </div>
           <div className="space-y-6">
+            <span className="inline-block text-[10px] font-semibold tracking-widest uppercase text-primary border border-primary/30 bg-primary/10 rounded px-2 py-1">
+              Organic Growth Accelerator for Creators &amp; Marketers
+            </span>
             <h1 className="text-3xl font-semibold text-foreground leading-tight">
-              The social capital<br />exchange
+              Turn Organic Posts Into Lead Generation Machines
             </h1>
             <p className="text-foreground-muted text-sm leading-relaxed max-w-xs">
-              Complete tasks. Earn points. Build campaigns. Every action is a quantifiable trade.
+              EngagefeX helps creators and marketers generate the early engagement their posts need so social media algorithms push their content to more people — resulting in more reach, followers, leads, and sales.
             </p>
           </div>
         </div>
