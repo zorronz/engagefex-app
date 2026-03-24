@@ -56,6 +56,19 @@ export default function Wallet() {
   const [creditPacks, setCreditPacks] = useState<CreditPack[]>([]);
   const [billing, setBilling] = useState<BillingCycle>('monthly');
   const [checkingStripe, setCheckingStripe] = useState(false);
+  const [paymentSettings, setPaymentSettings] = useState<{ razorpay_enabled: boolean; stripe_enabled: boolean } | null>(null);
+
+  // Fetch payment gateway settings from platform_settings
+  useEffect(() => {
+    supabase.from('platform_settings').select('key, value').in('key', ['razorpay_enabled', 'stripe_enabled']).then(({ data }) => {
+      const map: Record<string, string | null> = {};
+      (data ?? []).forEach(r => { map[r.key] = r.value; });
+      setPaymentSettings({
+        razorpay_enabled: map.razorpay_enabled === 'true',
+        stripe_enabled: map.stripe_enabled !== 'false', // default true if not set
+      });
+    });
+  }, []);
 
   // Check for Stripe success/cancel in URL
   useEffect(() => {
