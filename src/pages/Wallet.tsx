@@ -421,16 +421,20 @@ export default function Wallet() {
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-lg font-semibold text-foreground">${priceUSD.toFixed(2)}</span>
                     </div>
-                    {/* Stripe (USD) */}
-                    <button
-                      onClick={() => handleStripePackPurchase(pack)}
-                      disabled={isCheckingOut}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50">
-                      <ShoppingCart className="w-4 h-4" />
-                      {isCheckingOut ? 'Opening checkout...' : 'Buy with Card (USD)'}
-                    </button>
-                    {/* Razorpay (INR) — kept for backward compat */}
-                    {Number(pack.price_inr) > 0 && (
+                    {/* Stripe (USD) — shown when stripe_enabled or settings not yet loaded */}
+                    {paymentSettings === null ? (
+                      <div className="w-full h-10 rounded bg-surface-elevated animate-pulse" />
+                    ) : paymentSettings.stripe_enabled && (
+                      <button
+                        onClick={() => handleStripePackPurchase(pack)}
+                        disabled={isCheckingOut}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50">
+                        <ShoppingCart className="w-4 h-4" />
+                        {isCheckingOut ? 'Opening checkout...' : 'Buy with Card (USD)'}
+                      </button>
+                    )}
+                    {/* Razorpay (INR) — only shown when razorpay_enabled = true in Admin */}
+                    {paymentSettings?.razorpay_enabled && Number(pack.price_inr) > 0 && (
                       <button
                         onClick={() => handleRazorpayPack(pack)}
                         disabled={isCheckingOut}
