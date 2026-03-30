@@ -25,6 +25,7 @@ import Support from "./pages/Support.tsx";
 import Billing from "./pages/Billing.tsx";
 import SupportWidgetLoader from "./components/SupportWidgetLoader.tsx";
 import TrackingScriptsLoader from "./components/TrackingScriptsLoader.tsx";
+import WelcomeVideoPopup from "./components/WelcomeVideoPopup.tsx";
 
 const queryClient = new QueryClient();
 
