@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, Eye, Save, Globe, Image as ImageIcon, Palette, CreditCard, ToggleLeft, ToggleRight, MessageCircle, Code2 } from 'lucide-react';
+import { Upload, Eye, Save, Globe, Image as ImageIcon, Palette, CreditCard, ToggleLeft, ToggleRight, MessageCircle, Code2, Play, RefreshCw } from 'lucide-react';
 
 interface Setting { key: string; value: string | null }
 
@@ -14,7 +14,8 @@ export default function AdminPlatformSettings() {
   const [saved, setSaved] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [tab, setTab] = useState<'branding' | 'gateways' | 'support' | 'tracking'>('branding');
+  const [tab, setTab] = useState<'branding' | 'gateways' | 'support' | 'tracking' | 'video'>('branding');
+  const [forcingVideo, setForcingVideo] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const faviconRef = useRef<HTMLInputElement>(null);
 
@@ -94,8 +95,8 @@ export default function AdminPlatformSettings() {
     <div className="space-y-5 max-w-2xl">
       {/* Tab switcher */}
       <div className="flex gap-0.5 border-b border-border">
-      {([['branding', Globe, 'Branding'], ['gateways', CreditCard, 'Payment Integrations'], ['support', MessageCircle, 'Support Widget'], ['tracking', Code2, 'Tracking Scripts']] as const).map(([key, Icon, label]) => (
-          <button key={key} onClick={() => setTab(key as 'branding' | 'gateways' | 'support' | 'tracking')}
+      {([['branding', Globe, 'Branding'], ['gateways', CreditCard, 'Payment Integrations'], ['support', MessageCircle, 'Support Widget'], ['tracking', Code2, 'Tracking Scripts'], ['video', Play, 'Welcome Video']] as const).map(([key, Icon, label]) => (
+          <button key={key} onClick={() => setTab(key as typeof tab)}
             className={`flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-medium border-b-2 transition-colors ${tab === key ? 'border-primary text-primary' : 'border-transparent text-foreground-muted hover:text-foreground'}`}>
             <Icon className="w-3.5 h-3.5" />{label}
           </button>
@@ -338,6 +339,66 @@ export default function AdminPlatformSettings() {
           <div className="bg-surface-elevated border border-border-subtle rounded p-3">
             <p className="text-xs text-foreground-muted">
               <span className="text-foreground font-medium">How it works:</span> Scripts are injected once when the application loads. Changes take effect on the next page load. Only non-empty values are injected.
+            </p>
+          </div>
+        </div>
+      )}
+      {/* ─── WELCOME VIDEO ─── */}
+      {tab === 'video' && (
+        <div className="space-y-5">
+          <div className="bg-surface border border-border rounded p-5 space-y-3">
+            <p className="label-caps flex items-center gap-2"><Play className="w-3.5 h-3.5" />WELCOME VIDEO URL</p>
+            <p className="text-xs text-foreground-muted">Paste a YouTube video link. This video will appear as a popup on login and on the dashboard.</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={draft.welcome_video_url ?? ''}
+                onChange={e => setDraft(d => ({ ...d, welcome_video_url: e.target.value }))}
+                placeholder="https://youtube.com/watch?v=..."
+                className="flex-1 bg-background border border-border rounded px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-primary/60"
+              />
+              <button
+                onClick={() => saveSetting('welcome_video_url', draft.welcome_video_url ?? '')}
+                disabled={saving === 'welcome_video_url'}
+                className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saved === 'welcome_video_url' ? 'Saved!' : 'Save'}
+              </button>
+            </div>
+            {settings.welcome_video_url && (
+              <p className="text-xs text-earn font-mono">✓ Video URL configured</p>
+            )}
+          </div>
+
+          <div className="bg-surface border border-border rounded p-5 space-y-3">
+            <p className="label-caps flex items-center gap-2"><RefreshCw className="w-3.5 h-3.5" />FORCE SHOW NEW VIDEO</p>
+            <p className="text-xs text-foreground-muted">
+              Click this button to increment the video version. All users will see the popup again on their next login.
+              Current version: <span className="font-mono text-foreground font-semibold">{settings.welcome_video_version ?? '1'}</span>
+            </p>
+            <button
+              onClick={async () => {
+                setForcingVideo(true);
+                const currentVer = parseInt(settings.welcome_video_version ?? '1', 10) || 1;
+                const newVer = String(currentVer + 1);
+                await saveSetting('welcome_video_version', newVer);
+                setForcingVideo(false);
+              }}
+              disabled={forcingVideo || !settings.welcome_video_url}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground rounded text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${forcingVideo ? 'animate-spin' : ''}`} />
+              {forcingVideo ? 'Updating...' : 'Force Show New Video to All Users'}
+            </button>
+            {!settings.welcome_video_url && (
+              <p className="text-xs text-spend">Set a video URL first before forcing a new version.</p>
+            )}
+          </div>
+
+          <div className="bg-surface-elevated border border-border-subtle rounded p-3">
+            <p className="text-xs text-foreground-muted">
+              <span className="text-foreground font-medium">How it works:</span> When you force a new video, the version number increments. Users who haven't seen the latest version will get a popup on login. The video also stays visible on the dashboard permanently.
             </p>
           </div>
         </div>

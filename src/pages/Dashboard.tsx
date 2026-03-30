@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { CheckCircle2, ArrowUpRight, ArrowDownRight, Zap, Clock, ArrowRight, Flame, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import WelcomeVideoCard from '@/components/WelcomeVideoCard';
 
 type Transaction = Tables<'wallet_transactions'>;
 type Completion = Tables<'task_completions'> & {
@@ -233,6 +234,9 @@ export default function Dashboard() {
             <p className="font-mono text-lg font-semibold data-mono text-foreground">{profile?.points_purchased?.toLocaleString() ?? 0}</p>
           </div>
         </div>
+
+        {/* Welcome Video */}
+        <WelcomeVideoCard />
 
         {/* Recent completions */}
         <div>
