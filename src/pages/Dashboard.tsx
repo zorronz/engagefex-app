@@ -235,6 +235,9 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Welcome Video */}
+        <WelcomeVideoCard />
+
         {/* Recent completions */}
         <div>
           <div className="flex items-center justify-between mb-3">
