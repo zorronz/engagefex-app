@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, Eye, Save, Globe, Image as ImageIcon, Palette, CreditCard, ToggleLeft, ToggleRight, MessageCircle, Code2 } from 'lucide-react';
+import { Upload, Eye, Save, Globe, Image as ImageIcon, Palette, CreditCard, ToggleLeft, ToggleRight, MessageCircle, Code2, Play, RefreshCw } from 'lucide-react';
 
 interface Setting { key: string; value: string | null }
 
