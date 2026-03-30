@@ -343,6 +343,66 @@ export default function AdminPlatformSettings() {
           </div>
         </div>
       )}
+      {/* ─── WELCOME VIDEO ─── */}
+      {tab === 'video' && (
+        <div className="space-y-5">
+          <div className="bg-surface border border-border rounded p-5 space-y-3">
+            <p className="label-caps flex items-center gap-2"><Play className="w-3.5 h-3.5" />WELCOME VIDEO URL</p>
+            <p className="text-xs text-foreground-muted">Paste a YouTube video link. This video will appear as a popup on login and on the dashboard.</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={draft.welcome_video_url ?? ''}
+                onChange={e => setDraft(d => ({ ...d, welcome_video_url: e.target.value }))}
+                placeholder="https://youtube.com/watch?v=..."
+                className="flex-1 bg-background border border-border rounded px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:border-primary/60"
+              />
+              <button
+                onClick={() => saveSetting('welcome_video_url', draft.welcome_video_url ?? '')}
+                disabled={saving === 'welcome_video_url'}
+                className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saved === 'welcome_video_url' ? 'Saved!' : 'Save'}
+              </button>
+            </div>
+            {settings.welcome_video_url && (
+              <p className="text-xs text-earn font-mono">✓ Video URL configured</p>
+            )}
+          </div>
+
+          <div className="bg-surface border border-border rounded p-5 space-y-3">
+            <p className="label-caps flex items-center gap-2"><RefreshCw className="w-3.5 h-3.5" />FORCE SHOW NEW VIDEO</p>
+            <p className="text-xs text-foreground-muted">
+              Click this button to increment the video version. All users will see the popup again on their next login.
+              Current version: <span className="font-mono text-foreground font-semibold">{settings.welcome_video_version ?? '1'}</span>
+            </p>
+            <button
+              onClick={async () => {
+                setForcingVideo(true);
+                const currentVer = parseInt(settings.welcome_video_version ?? '1', 10) || 1;
+                const newVer = String(currentVer + 1);
+                await saveSetting('welcome_video_version', newVer);
+                setForcingVideo(false);
+              }}
+              disabled={forcingVideo || !settings.welcome_video_url}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-primary text-primary-foreground rounded text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${forcingVideo ? 'animate-spin' : ''}`} />
+              {forcingVideo ? 'Updating...' : 'Force Show New Video to All Users'}
+            </button>
+            {!settings.welcome_video_url && (
+              <p className="text-xs text-spend">Set a video URL first before forcing a new version.</p>
+            )}
+          </div>
+
+          <div className="bg-surface-elevated border border-border-subtle rounded p-3">
+            <p className="text-xs text-foreground-muted">
+              <span className="text-foreground font-medium">How it works:</span> When you force a new video, the version number increments. Users who haven't seen the latest version will get a popup on login. The video also stays visible on the dashboard permanently.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
