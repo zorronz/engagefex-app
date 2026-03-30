@@ -323,6 +323,8 @@ export type Database = {
           user_id: string
           wallet_balance: number
           welcome_offer_shown: boolean
+          welcome_video_seen: boolean
+          welcome_video_version_seen: number
           withdrawable_balance: number
         }
         Insert: {
@@ -357,6 +359,8 @@ export type Database = {
           user_id: string
           wallet_balance?: number
           welcome_offer_shown?: boolean
+          welcome_video_seen?: boolean
+          welcome_video_version_seen?: number
           withdrawable_balance?: number
         }
         Update: {
@@ -391,6 +395,8 @@ export type Database = {
           user_id?: string
           wallet_balance?: number
           welcome_offer_shown?: boolean
+          welcome_video_seen?: boolean
+          welcome_video_version_seen?: number
           withdrawable_balance?: number
         }
         Relationships: [
