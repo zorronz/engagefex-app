@@ -27,6 +27,7 @@ import {
   Settings,
   DollarSign,
   Handshake,
+  Video,
 } from 'lucide-react';
 
 type Tab = 'overview' | 'users' | 'tasks' | 'referrals' | 'payments' | 'economy' | 'security' | 'logs' | 'platform' | 'pricing' | 'affiliate-payouts';
