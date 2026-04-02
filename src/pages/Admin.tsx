@@ -112,6 +112,7 @@ export default function Admin() {
         {activeTab === 'pricing'           && <AdminPricing />}
         {activeTab === 'affiliate-payouts' && <AdminAffiliatePayouts />}
         {activeTab === 'platform'          && <AdminPlatformSettings />}
+        {activeTab === 'training-videos'   && <AdminTrainingVideos />}
       </div>
     </DashboardLayout>
   );
