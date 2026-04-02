@@ -13,6 +13,7 @@ import AdminLogs from '@/components/admin/AdminLogs';
 import AdminPlatformSettings from '@/components/admin/AdminPlatformSettings';
 import AdminPricing from '@/components/admin/AdminPricing';
 import AdminAffiliatePayouts from '@/components/admin/AdminAffiliatePayouts';
+import AdminTrainingVideos from '@/components/admin/AdminTrainingVideos';
 import {
   Shield,
   LayoutDashboard,
