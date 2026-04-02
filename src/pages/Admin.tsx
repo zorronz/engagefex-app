@@ -30,7 +30,7 @@ import {
   Video,
 } from 'lucide-react';
 
-type Tab = 'overview' | 'users' | 'tasks' | 'referrals' | 'payments' | 'economy' | 'security' | 'logs' | 'platform' | 'pricing' | 'affiliate-payouts';
+type Tab = 'overview' | 'users' | 'tasks' | 'referrals' | 'payments' | 'economy' | 'security' | 'logs' | 'platform' | 'pricing' | 'affiliate-payouts' | 'training-videos';
 
 export default function Admin() {
   const { user } = useAuth();
