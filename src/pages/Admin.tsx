@@ -65,6 +65,7 @@ export default function Admin() {
     { key: 'pricing',           icon: DollarSign,      label: 'Pricing' },
     { key: 'affiliate-payouts', icon: Handshake,       label: 'Affiliate Payouts' },
     { key: 'platform',          icon: Settings,        label: 'Platform Settings' },
+    { key: 'training-videos',   icon: Video,           label: 'Training Videos' },
   ];
 
   return (
