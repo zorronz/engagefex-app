@@ -21,6 +21,7 @@ import {
   Link2,
   HelpCircle,
   Receipt,
+  Video,
 } from 'lucide-react';
 
 const navItems = [
