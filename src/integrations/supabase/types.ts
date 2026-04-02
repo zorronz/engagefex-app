@@ -698,6 +698,30 @@ export type Database = {
         }
         Relationships: []
       }
+      training_videos: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          title: string
+          youtube_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title: string
+          youtube_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          youtube_url?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

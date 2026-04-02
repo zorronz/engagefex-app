@@ -23,6 +23,7 @@ import Leaderboard from "./pages/Leaderboard.tsx";
 import Affiliate from "./pages/Affiliate.tsx";
 import Support from "./pages/Support.tsx";
 import Billing from "./pages/Billing.tsx";
+import Training from "./pages/Training.tsx";
 import SupportWidgetLoader from "./components/SupportWidgetLoader.tsx";
 import TrackingScriptsLoader from "./components/TrackingScriptsLoader.tsx";
 import WelcomeVideoPopup from "./components/WelcomeVideoPopup.tsx";
@@ -79,6 +80,7 @@ const App = () => (
               <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
               <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
               <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+              <Route path="/training" element={<ProtectedRoute><Training /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

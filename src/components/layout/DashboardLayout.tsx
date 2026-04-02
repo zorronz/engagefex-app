@@ -21,6 +21,7 @@ import {
   Link2,
   HelpCircle,
   Receipt,
+  Video,
 } from 'lucide-react';
 
 const navItems = [
@@ -32,6 +33,7 @@ const navItems = [
   { to: '/referrals', icon: Users, label: 'Referrals' },
   { to: '/affiliate', icon: Link2, label: 'Affiliate' },
   { to: '/billing', icon: Receipt, label: 'Billing' },
+  { to: '/training', icon: Video, label: 'Training' },
   { to: '/support', icon: HelpCircle, label: 'Support' },
 ];
 

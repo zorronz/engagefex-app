@@ -13,6 +13,7 @@ import AdminLogs from '@/components/admin/AdminLogs';
 import AdminPlatformSettings from '@/components/admin/AdminPlatformSettings';
 import AdminPricing from '@/components/admin/AdminPricing';
 import AdminAffiliatePayouts from '@/components/admin/AdminAffiliatePayouts';
+import AdminTrainingVideos from '@/components/admin/AdminTrainingVideos';
 import {
   Shield,
   LayoutDashboard,
@@ -26,9 +27,10 @@ import {
   Settings,
   DollarSign,
   Handshake,
+  Video,
 } from 'lucide-react';
 
-type Tab = 'overview' | 'users' | 'tasks' | 'referrals' | 'payments' | 'economy' | 'security' | 'logs' | 'platform' | 'pricing' | 'affiliate-payouts';
+type Tab = 'overview' | 'users' | 'tasks' | 'referrals' | 'payments' | 'economy' | 'security' | 'logs' | 'platform' | 'pricing' | 'affiliate-payouts' | 'training-videos';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -63,6 +65,7 @@ export default function Admin() {
     { key: 'pricing',           icon: DollarSign,      label: 'Pricing' },
     { key: 'affiliate-payouts', icon: Handshake,       label: 'Affiliate Payouts' },
     { key: 'platform',          icon: Settings,        label: 'Platform Settings' },
+    { key: 'training-videos',   icon: Video,           label: 'Training Videos' },
   ];
 
   return (
@@ -109,6 +112,7 @@ export default function Admin() {
         {activeTab === 'pricing'           && <AdminPricing />}
         {activeTab === 'affiliate-payouts' && <AdminAffiliatePayouts />}
         {activeTab === 'platform'          && <AdminPlatformSettings />}
+        {activeTab === 'training-videos'   && <AdminTrainingVideos />}
       </div>
     </DashboardLayout>
   );
