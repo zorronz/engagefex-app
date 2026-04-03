@@ -129,6 +129,17 @@ export default function AdminTrainingVideos() {
               />
             </div>
           </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Display Order</Label>
+            <Input
+              type="number"
+              value={displayOrder}
+              onChange={(e) => setDisplayOrder(parseInt(e.target.value) || 0)}
+              placeholder="0"
+              className="bg-background w-32"
+              min={0}
+            />
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Switch checked={isActive} onCheckedChange={setIsActive} />
