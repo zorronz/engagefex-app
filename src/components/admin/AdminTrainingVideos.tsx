@@ -14,6 +14,7 @@ interface TrainingVideo {
   title: string;
   youtube_url: string;
   is_active: boolean;
+  display_order: number;
   created_at: string;
 }
 
