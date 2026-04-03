@@ -30,6 +30,7 @@ export default function AdminTrainingVideos() {
   const [title, setTitle] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [displayOrder, setDisplayOrder] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const { data: videos = [], isLoading } = useQuery({
