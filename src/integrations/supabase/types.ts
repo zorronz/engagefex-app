@@ -701,6 +701,7 @@ export type Database = {
       training_videos: {
         Row: {
           created_at: string
+          display_order: number
           id: string
           is_active: boolean
           title: string
@@ -708,6 +709,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          display_order?: number
           id?: string
           is_active?: boolean
           title: string
@@ -715,6 +717,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          display_order?: number
           id?: string
           is_active?: boolean
           title?: string

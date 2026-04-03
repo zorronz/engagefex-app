@@ -14,6 +14,7 @@ interface TrainingVideo {
   title: string;
   youtube_url: string;
   is_active: boolean;
+  display_order: number;
   created_at: string;
 }
 
@@ -29,6 +30,7 @@ export default function AdminTrainingVideos() {
   const [title, setTitle] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [displayOrder, setDisplayOrder] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const { data: videos = [], isLoading } = useQuery({
@@ -36,7 +38,8 @@ export default function AdminTrainingVideos() {
     queryFn: async () => {
       const { data, error } = await (supabase.from('training_videos') as any)
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: true });
       if (error) throw error;
       return data as TrainingVideo[];
     },
@@ -49,12 +52,12 @@ export default function AdminTrainingVideos() {
 
       if (editingId) {
         const { error } = await (supabase.from('training_videos') as any)
-          .update({ title: title.trim(), youtube_url: youtubeUrl.trim(), is_active: isActive })
+          .update({ title: title.trim(), youtube_url: youtubeUrl.trim(), is_active: isActive, display_order: displayOrder })
           .eq('id', editingId);
         if (error) throw error;
       } else {
         const { error } = await (supabase.from('training_videos') as any)
-          .insert({ title: title.trim(), youtube_url: youtubeUrl.trim(), is_active: isActive });
+          .insert({ title: title.trim(), youtube_url: youtubeUrl.trim(), is_active: isActive, display_order: displayOrder });
         if (error) throw error;
       }
     },
@@ -84,6 +87,7 @@ export default function AdminTrainingVideos() {
     setTitle('');
     setYoutubeUrl('');
     setIsActive(true);
+    setDisplayOrder(0);
     setEditingId(null);
   };
 
@@ -91,6 +95,7 @@ export default function AdminTrainingVideos() {
     setTitle(v.title);
     setYoutubeUrl(v.youtube_url);
     setIsActive(v.is_active);
+    setDisplayOrder(v.display_order);
     setEditingId(v.id);
   };
 
@@ -123,6 +128,17 @@ export default function AdminTrainingVideos() {
                 className="bg-background"
               />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Display Order</Label>
+            <Input
+              type="number"
+              value={displayOrder}
+              onChange={(e) => setDisplayOrder(parseInt(e.target.value) || 0)}
+              placeholder="0"
+              className="bg-background w-32"
+              min={0}
+            />
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -178,6 +194,7 @@ export default function AdminTrainingVideos() {
                       <p className="text-sm font-medium text-foreground truncate">{v.title}</p>
                       <p className="text-xs text-foreground-muted truncate">{v.youtube_url}</p>
                     </div>
+                    <span className="text-xs font-mono text-foreground-muted px-1.5">#{v.display_order}</span>
                     <span
                       className={`text-xs font-mono px-2 py-0.5 rounded ${
                         v.is_active
