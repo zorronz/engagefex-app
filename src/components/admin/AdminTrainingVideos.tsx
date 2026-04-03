@@ -95,6 +95,7 @@ export default function AdminTrainingVideos() {
     setTitle(v.title);
     setYoutubeUrl(v.youtube_url);
     setIsActive(v.is_active);
+    setDisplayOrder(v.display_order);
     setEditingId(v.id);
   };
 
