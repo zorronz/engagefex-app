@@ -87,6 +87,7 @@ export default function AdminTrainingVideos() {
     setTitle('');
     setYoutubeUrl('');
     setIsActive(true);
+    setDisplayOrder(0);
     setEditingId(null);
   };
 
