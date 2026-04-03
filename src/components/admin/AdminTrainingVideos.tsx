@@ -194,6 +194,7 @@ export default function AdminTrainingVideos() {
                       <p className="text-sm font-medium text-foreground truncate">{v.title}</p>
                       <p className="text-xs text-foreground-muted truncate">{v.youtube_url}</p>
                     </div>
+                    <span className="text-xs font-mono text-foreground-muted px-1.5">#{v.display_order}</span>
                     <span
                       className={`text-xs font-mono px-2 py-0.5 rounded ${
                         v.is_active

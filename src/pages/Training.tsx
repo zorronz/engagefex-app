@@ -25,6 +25,7 @@ export default function Training() {
       const { data, error } = await (supabase.from('training_videos') as any)
         .select('*')
         .eq('is_active', true)
+        .order('display_order', { ascending: true })
         .order('created_at', { ascending: true });
       if (error) throw error;
       return data as TrainingVideo[];
