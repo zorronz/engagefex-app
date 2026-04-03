@@ -57,7 +57,7 @@ export default function AdminTrainingVideos() {
         if (error) throw error;
       } else {
         const { error } = await (supabase.from('training_videos') as any)
-          .insert({ title: title.trim(), youtube_url: youtubeUrl.trim(), is_active: isActive });
+          .insert({ title: title.trim(), youtube_url: youtubeUrl.trim(), is_active: isActive, display_order: displayOrder });
         if (error) throw error;
       }
     },
