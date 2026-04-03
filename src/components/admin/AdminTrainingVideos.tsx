@@ -52,7 +52,7 @@ export default function AdminTrainingVideos() {
 
       if (editingId) {
         const { error } = await (supabase.from('training_videos') as any)
-          .update({ title: title.trim(), youtube_url: youtubeUrl.trim(), is_active: isActive })
+          .update({ title: title.trim(), youtube_url: youtubeUrl.trim(), is_active: isActive, display_order: displayOrder })
           .eq('id', editingId);
         if (error) throw error;
       } else {
